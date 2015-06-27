@@ -106,7 +106,14 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         ElmStreet: [
             {pos: 0, label: "FrontRoomPIR",  display: "Front Room PIR"},
             {pos: 1, label: "JimsRoomPIR",   display: "Jim's Office PIR"},
-            {pos: 6, label: "FrontDoorSep",  display: "Front Door Separation"}
+            {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
+            {pos: 3, label: "MasterBRPIR",   display: "MasterBR PIR"},
+            {pos: 4, label: "LivingroomPIR",   display: "Livingroom PIR"},
+            {pos: 5, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 6, label: "BackDoorSep",  display: "Back Door Separation"},
+            {pos: 8, label: "OnePersonHome",  display: "One Person Home"},
+            {pos: 9, label: "TwoPeopleHome",  display: "Two People Home"},
+            {pos: 10, label: "NoOneHome",  display: "No One Home"}
         ]
     }
 
@@ -867,10 +874,10 @@ SHRIMPWARE.SISTest = (function() { // private module variables
 
     },
     clearSensorConfig = function() {
-        for (var i=0; i<10; i++) {
-            var commandParam = "register," + i + "," + i + ",cleared";
+        for (var i=0; i<15; i++) {
+            var commandParam = "register," + i + "," + i + ",unknown";
             logAdd(commandParam);
-            callSparkCoreFunction("Register",commandParam, function(data) {
+            callSparkCoreFunction("Register",commandParam, function(i) {
                 logAdd("Sensor Config position cleared:" + i);
             }
         )}
