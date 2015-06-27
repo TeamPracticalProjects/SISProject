@@ -354,6 +354,10 @@ void loop()
             if (i <= MAX_DOOR) {
             	processDoorSensor(i);
         	  }
+            else
+            {
+              processSensor(i);
+            }
           }
 
            	// code to blink the D7 LED when a sensor trip is detected
@@ -621,6 +625,24 @@ void processDoorSensor(int sensorIndex)
 
 }
 /***********************************end of processDoorSensor() ****************************************/
+
+/********************************** processSensor() *****************************************/
+// processSensor():  function to process a generic sensor trip.  This function creates a
+//  log entry for each registered sensor trip and records the log entry in the circular buffer.
+//
+//  Arguments:
+//  	sensorIndex: the index into the sensorName[] and activateCode[] arrays for the sensor
+//       	to be logged.
+
+void processSensor(int sensorIndex)
+{
+
+	logSensor(sensorIndex);
+
+	return;
+
+}
+/***********************************end of processSensor() ****************************************/
 
 /******************************************** writeConfig() ******************************************/
 // writeConfig():  writes the sensor configuration out to non-volatile memory using the Wire library
