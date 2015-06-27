@@ -13,10 +13,14 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08c.  6/02/15.  Spark Only.
+//  Version 08d.  6/02/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// Version 08d: added MAX_DOOR constant. Sensors in posistions above MAX_DOOR are considered 
+//  generic sensors and don't affect PIR or DOOR algorithms. Sensors in these positions are just
+//  added to the log. Also increased number of sensors from 10 to 15.
+//
 // Version 08c: added ".c_str()" to the end of line 1145 per a suggestion from Forum to fix the
 //  Photon string early termination problem ( bufferReadout += Time.timeStr(index).c_str(); )
 //
