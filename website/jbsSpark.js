@@ -337,10 +337,20 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     // for each device on the web page in a div id="deviceListOutput". We
     // then call getAttributes to obtain all the attributes from the cloud for
     // all of the devices registered to the cloud account.
+    unselectDevice = function() {
+        // when a device is unselected, some of the web page needs to be cleared
+        if (_mode.name == "SIS") {
+            document.getElementById("currentCoreConfig").innerHTML = "select a device";
+            document.getElementById("functionButtons").innerHTML = "select a device";
+            document.getElementById("variableButtons").innerHTML = "";
+        }
+    },
     listAllDevices = function() {
         // query spark.io for an updated list of devices
       logAdd("In listAllDevices");
       document.getElementById("btnListAllDevices").disabled = true;
+      unselectDevice();
+      commandOutputClear();
       var devicesPr = spark.listDevices();
       // NEW TO JS: The next line will execute the spark.listDevices()
       //   method and then call either one of the other of the two routines
