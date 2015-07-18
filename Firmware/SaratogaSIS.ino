@@ -1,3 +1,5 @@
+//#define SEND_EVENTS_TO_WEBPAGE // if on will send the events needed for the
+                                 // config web page to display live events
 //#define TESTRUN
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
@@ -107,7 +109,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08d";   	// current firmware version
+const String VERSION = "S08e";   	// current firmware version
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -359,9 +361,13 @@ void loop()
         	sensorCode.toCharArray(cloudMsg, sensorCode.length() + 1 );  // publish to cloud
         	cloudMsg[sensorCode.length() + 2] = '\0';  // add in the string null terinator
 
-        	// send notification of new sensor trip for web page
-        	publishEvent(String(i));
 
+#if SEND_EVENTS_TO_WEBPAGE
+          // send notification of new sensor trip for web page
+          // This can send events too fast, so it is ifdef'd until
+          // we get a send queue for publishing
+        	publishEvent(String(i));
+#endif
         	// determine type of sensor and process accordingly
         	if(i <= MAX_PIR)    	// then the sensor is a PIR
         	{
