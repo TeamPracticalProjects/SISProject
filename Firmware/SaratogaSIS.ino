@@ -1,3 +1,5 @@
+//#define SEND_EVENTS_TO_WEBPAGE // if on will send the events needed for the
+                                 // config web page to display live events
 //#define TESTRUN
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
@@ -13,17 +15,31 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08c.  6/02/15.  Spark Only.
+//  Version 08e.  6/02/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// Version 8.0e: Added a global variable ALARM_SENSOR = 11. If a sensor is tripped
+//  we test for this location. If this matches then we publish an SISAlarm. This
+//  can be monitored by IFTTT to do something more agressive, such as dialing a phone.
+//  The intent is for this to be associated with a button sensor.
+//
+// Version 8.0d: added particle public function lastGTrip() and a global lastGenericTrip.
+//  When a sensor in a position above MAX_DOOR is tripped, that position is stored in
+//  lastGenericTrip. When lastGTrip is called it will return the value of lastGenericTrip
+//  and then set lastGenericTrip to 0. The intention is for IFTTT to call lastGTrip and
+//  then decide to take an action based on the value returned.
+//  This is a bit of a test. The long view is to have a function alertMe() that will keep a
+//  pointer into the circular buffer and return a history of sensor trips each time it is
+//  called.
+//
 // Version 08c: added ".c_str()" to the end of line 1145 per a suggestion from Forum to fix the
 //  Photon string early termination problem ( bufferReadout += Time.timeStr(index).c_str(); )
 //
 // Version 08b:  included #ifdef and #incude temporary fix for I2C library issue on Photon.
 //  Uncommented Wire.setSpeed() with this fix.
 //
-// Version 08a:  had to comment out line 215: Wire.setSpeed(CLOCK_SPEED_100KHZ); and line 374: 
+// Version 08a:  had to comment out line 215: Wire.setSpeed(CLOCK_SPEED_100KHZ); and line 374:
 //  Spark.SyncTime(); in order to get the code to compile for Photon.  It compiles OK for Core.
 //  Also had to change the varible name "registrationInfo" to "registration" (line 253) and
 //  "circularBufferReadout" to "circularBuff" (line 252) and now these variables are accessible by SIS
@@ -38,7 +54,7 @@
 // Version 6a -- version 6 caused each of my two test cores to reset, at very different times.  This
 //  was even though I could not cause a reset by power cycling my cable modem.  This version reduces
 //  the buffer size to 25, does not publish each sensor trip, but publishes recorded events.  This
-//  version is for robustness testing of a possible operational scenario where the main logging 
+//  version is for robustness testing of a possible operational scenario where the main logging
 //  is via publication to the cloud with a small local buffer as a backup.
 //
 // Version 6 - put in changes requested by Jim to baseline version 5:
@@ -47,7 +63,7 @@
 //      re-establish the time when movement is again detected.
 //  - retain the ability, based upon #define, to publish to the cloud each of the following: trip,
 //      event, and advisory.
-//  - change the return value of register() to be -1 for any failure (memo - was already there - 
+//  - change the return value of register() to be -1 for any failure (memo - was already there -
 //      no change required.
 //
 // Version 5 - increase buffer size to 50 (then reduced to 40) for testing Core resets.
@@ -93,17 +109,19 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08c";   	// current firmware version
+const String VERSION = "S08e";   	// current firmware version
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
 const int TOLERANCE = 60;  	// % timing tolerance on HIGH or LOW values for codes
 const unsigned long ONE_DAY_IN_MILLIS = 86400000L;	// 24*60*60*1000
-const int MAX_WIRELESS_SENSORS = 10;
+const int MAX_WIRELESS_SENSORS = 15;
 const unsigned long FILTER_TIME = 5000L;  // Once a sensor trip has been detected, it requires 5 seconds before a new detection is valid
 const int BUF_LEN = 25;     	// circular buffer size.
 const int MAX_PIR = 4;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
                             	//  BUF_LEN are non-PIR sensors
+const int MAX_DOOR = 6;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
+const int ALARM_SENSOR = 11;  // When this sensor is tripped, publish an SISAlarm
 const int MAX_SUBSTRINGS = 6;   // the largest number of comma delimited substrings in a command string
 const byte NUM_BLINKS = 2;  	// number of times to blink the D7 LED when a sensor trip is received
 const unsigned long BLINK_TIME = 300L; // number of milliseconds to turn D7 LED on and off for a blink
@@ -154,7 +172,13 @@ String sensorName[] =      	{ "FrontRoom PIR",
                              	"GarageDoor Sep",
                              	"UNREGISTERED S7",
                              	"UNREGISTERED S8",
-                             	"UNREGISTERED S9"
+                             	"UNREGISTERED S9",
+                             	"UNREGISTERED S10",
+                             	"UNREGISTERED S11",
+                             	"UNREGISTERED S12",
+                             	"UNREGISTERED S13",
+                             	"UNREGISTERED S14",
+                             	"UNREGISTERED S15"
                            	};
 
 unsigned long activateCode[] = { 86101,   // sensor 0 (door/window) activation code
@@ -166,7 +190,12 @@ unsigned long activateCode[] = { 86101,   // sensor 0 (door/window) activation c
                              	12899438,   // sensor 6 (water level sensor) activation code
                              	0,      	// UNREGISTERED SENSOR
                              	0,      	// UNREGISTERED SENSOR
-                             	0       	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
                            	};
 
 unsigned long lastTripTime[MAX_WIRELESS_SENSORS];	// array to hold the last time a sensor was tripped - for filtering purposes
@@ -193,6 +222,8 @@ int head = 0;       	// index of the head of the circular buffer
 int tail = 0;       	// index of the tail of the buffer
 char config[120];    	// buffer to hold local configuration information
 long eventNumber = 0;   // grows monotonically to make each event unique
+int lastGenericTrip = 0;  // config position of last sensor above MAX_DOOR to trip
+                          // Used by lastGTrip().
 
 #if defined(DEBUG_EVENT) || defined(DEBUG_ADVISORY) || defined(DEBUG_COMMANDS)
 	const unsigned long FILTER_TIME_UNREGISTERED = 5000L; // same as above, but for unregistered sensors
@@ -263,6 +294,7 @@ void setup()
   Spark.variable("circularBuff", cloudBuf, STRING);
   Spark.variable("registration", registrationInfo, STRING);
   Spark.function("Register", registrar);
+  Spark.function("lastGTrip5", lastGTrip);
 
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
@@ -273,7 +305,7 @@ void setup()
   	lastTripTime[i] = 0L;
   }
 
- 
+
   digitalWrite(D7, LOW);
 
 }
@@ -329,9 +361,13 @@ void loop()
         	sensorCode.toCharArray(cloudMsg, sensorCode.length() + 1 );  // publish to cloud
         	cloudMsg[sensorCode.length() + 2] = '\0';  // add in the string null terinator
 
-        	// send notification of new sensor trip for web page
-//        	publishEvent(String(i));
 
+#if SEND_EVENTS_TO_WEBPAGE
+          // send notification of new sensor trip for web page
+          // This can send events too fast, so it is ifdef'd until
+          // we get a send queue for publishing
+        	publishEvent(String(i));
+#endif
         	// determine type of sensor and process accordingly
         	if(i <= MAX_PIR)    	// then the sensor is a PIR
         	{
@@ -339,8 +375,21 @@ void loop()
         	}
         	else                	// not a PIR, then a door sensor
         	{
+            if (i <= MAX_DOOR)
+            {
             	processDoorSensor(i);
-        	}
+        	  }
+            else
+            {
+              processSensor(i);
+            }
+          }
+
+          if (i == ALARM_SENSOR) {
+
+            sparkPublish("SISAlarm", "Alarm sensor trip", 60 );
+
+          }
 
            	// code to blink the D7 LED when a sensor trip is detected
         	if(blinkReady)
@@ -464,7 +513,7 @@ void logMessage(int messageIndex)
         readFromBuffer(0, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
         Spark.publish("LogEntry", localBuf);  // ... and publish it to the cloud for xteranl logging
     #endif
-    
+
 	return;
 }
 
@@ -514,13 +563,13 @@ void logSensor(int sensorIndex)
 	}
 
 	cBufInsert("" + logEntry);
-	
+
 	#ifdef CLOUD_LOG
         char localBuf[90];
         readFromBuffer(0, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
         Spark.publish("LogEntry", localBuf);  // ... and publish it to the cloud for xteranl logging
     #endif
-    
+
 	return;
 }
 
@@ -572,10 +621,10 @@ void processPIRSensor(int sensorIndex)
     	logSensor(sensorIndex);
     	comatose = false;   // any PIR resets comatose flag
 	}
-    
+
     // any PIR trip indicates that person is moving
-    lastPIRTime = Time.now();  
-    
+    lastPIRTime = Time.now();
+
     // update globals for PIR trip detection
     lastSensorIsDoor = false;
 
@@ -607,6 +656,25 @@ void processDoorSensor(int sensorIndex)
 
 }
 /***********************************end of processDoorSensor() ****************************************/
+
+/********************************** processSensor() *****************************************/
+// processSensor():  function to process a generic sensor trip.  This function creates a
+//  log entry for each registered sensor trip and records the log entry in the circular buffer.
+//
+//  Arguments:
+//  	sensorIndex: the index into the sensorName[] and activateCode[] arrays for the sensor
+//       	to be logged.
+
+void processSensor(int sensorIndex)
+{
+
+	logSensor(sensorIndex);
+  lastGenericTrip = sensorIndex;
+
+	return;
+
+}
+/***********************************end of processSensor() ****************************************/
 
 /******************************************** writeConfig() ******************************************/
 // writeConfig():  writes the sensor configuration out to non-volatile memory using the Wire library
@@ -1042,7 +1110,7 @@ int registrar(String action)
         	break;
 
     	default:
-            numSubstrings = -1; // return an error code for unknown command       	
+            numSubstrings = -1; // return an error code for unknown command
         	break;
 	}
 
@@ -1067,17 +1135,17 @@ int readBuffer(String location)
 {
     int offset;
     int result;
-    
+
     offset = location.toInt();
     result = readFromBuffer(offset, cloudBuf);
-    
+
     return result;
 }
 
 /*********************************end of readBuffer() *****************************************/
 
 /********************************** readFromBuffer() ******************************************/
-// readFromBuffer(): utility fujction to read from the circular buffer into the designated 
+// readFromBuffer(): utility fujction to read from the circular buffer into the designated
 //  character array.
 //  Arguments:
 //      int offset: the offset into the circular buffer to read from. 0 is the latest entry.  The
@@ -1209,6 +1277,46 @@ String cBufRead(int offset)
 
 }
 /****************************************** end of cBufRead() ***************************************/
+
+
+/****************************************** lastGTrip () ************************/
+// Public Spark Function
+// pass in the value of the sensor position of interest
+// if the lastGenericTrip was that value then return 1, else return 0
+//
+int lastGTrip(String data)
+{
+
+  //xxx debug only
+  static int counter;
+  counter++;
+  String msg = String(counter);
+  sparkPublish("lastGTrip", msg , 5);
+
+  int retCode = 0;
+  return counter;
+
+/*
+  int returnValue = 0;
+  int positionToTest = data.toInt(); //returns 0 for non numeric data
+
+  if (lastGenericTrip == positionToTest)
+  {
+
+    returnValue = 1;
+    lastGenericTrip = 0;
+
+  }
+
+  return returnValue;
+*/
+
+  return 1;
+}
+
+
+/****************************************** end of lastGTrip () ****************/
+
 
 
 #ifdef TESTRUN
