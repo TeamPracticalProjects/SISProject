@@ -32,6 +32,9 @@
 //  This is a bit of a test. The long view is to have a function alertMe() that will keep a
 //  pointer into the circular buffer and return a history of sensor trips each time it is
 //  called.
+// Version 08d: added MAX_DOOR constant. Sensors in posistions above MAX_DOOR are considered
+//  generic sensors and don't affect PIR or DOOR algorithms. Sensors in these positions are just
+//  added to the log. Also increased number of sensors from 10 to 15.
 //
 // Version 08c: added ".c_str()" to the end of line 1145 per a suggestion from Forum to fix the
 //  Photon string early termination problem ( bufferReadout += Time.timeStr(index).c_str(); )
