@@ -129,12 +129,12 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 1, label: "JimsRoomPIR",   display: "Jim's Office PIR"},
             {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
             {pos: 3, label: "MasterBRPIR",   display: "MasterBR PIR"},
-            {pos: 4, label: "LivingroomPIR",   display: "Livingroom PIR"},
             {pos: 5, label: "FrontDoorSep",  display: "Front Door Separation"},
             {pos: 6, label: "BackDoorSep",  display: "Back Door Separation"},
             {pos: 8, label: "OnePersonHome",  display: "One Person Home"},
             {pos: 9, label: "TwoPeopleHome",  display: "Two People Home"},
-            {pos: 10, label: "NoOneHome",  display: "No One Home"}
+            {pos: 10, label: "NoOneHome",  display: "No One Home"},
+            {pos: 11, label: "AlertButton", display: "Alert Button"}
         ]
     }
 
@@ -521,7 +521,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             }
 
             var data = eventMonitor.responseText;
-            //console.log(data);
+            console.log(data);
             if (data.length > 5) {  // a short length indicates a heartbeat from the cloud
                 processPublishNotificationGroup(data);
             }
