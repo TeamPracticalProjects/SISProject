@@ -1,3 +1,5 @@
+//#define SEND_EVENTS_TO_WEBPAGE // if on will send the events needed for the
+                                 // config web page to display live events
 //#define TESTRUN
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
@@ -13,13 +15,23 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08d.  6/02/15.  Spark Only.
+//  Version 08e.  6/02/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-// Version 08d: added MAX_DOOR constant. Sensors in posistions above MAX_DOOR are considered 
-//  generic sensors and don't affect PIR or DOOR algorithms. Sensors in these positions are just
-//  added to the log. Also increased number of sensors from 10 to 15.
+// Version 8.0e: Added a global variable ALARM_SENSOR = 11. If a sensor is tripped
+//  we test for this location. If this matches then we publish an SISAlarm. This
+//  can be monitored by IFTTT to do something more agressive, such as dialing a phone.
+//  The intent is for this to be associated with a button sensor.
+//
+// Version 8.0d: added particle public function lastGTrip() and a global lastGenericTrip.
+//  When a sensor in a position above MAX_DOOR is tripped, that position is stored in
+//  lastGenericTrip. When lastGTrip is called it will return the value of lastGenericTrip
+//  and then set lastGenericTrip to 0. The intention is for IFTTT to call lastGTrip and
+//  then decide to take an action based on the value returned.
+//  This is a bit of a test. The long view is to have a function alertMe() that will keep a
+//  pointer into the circular buffer and return a history of sensor trips each time it is
+//  called.
 //
 // Version 08c: added ".c_str()" to the end of line 1145 per a suggestion from Forum to fix the
 //  Photon string early termination problem ( bufferReadout += Time.timeStr(index).c_str(); )
@@ -97,7 +109,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08c";   	// current firmware version
+const String VERSION = "S08e";   	// current firmware version
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -109,6 +121,7 @@ const int BUF_LEN = 25;     	// circular buffer size.
 const int MAX_PIR = 4;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
                             	//  BUF_LEN are non-PIR sensors
 const int MAX_DOOR = 6;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
+const int ALARM_SENSOR = 11;  // When this sensor is tripped, publish an SISAlarm
 const int MAX_SUBSTRINGS = 6;   // the largest number of comma delimited substrings in a command string
 const byte NUM_BLINKS = 2;  	// number of times to blink the D7 LED when a sensor trip is received
 const unsigned long BLINK_TIME = 300L; // number of milliseconds to turn D7 LED on and off for a blink
@@ -209,6 +222,8 @@ int head = 0;       	// index of the head of the circular buffer
 int tail = 0;       	// index of the tail of the buffer
 char config[120];    	// buffer to hold local configuration information
 long eventNumber = 0;   // grows monotonically to make each event unique
+int lastGenericTrip = 0;  // config position of last sensor above MAX_DOOR to trip
+                          // Used by lastGTrip().
 
 #if defined(DEBUG_EVENT) || defined(DEBUG_ADVISORY) || defined(DEBUG_COMMANDS)
 	const unsigned long FILTER_TIME_UNREGISTERED = 5000L; // same as above, but for unregistered sensors
@@ -279,6 +294,7 @@ void setup()
   Spark.variable("circularBuff", cloudBuf, STRING);
   Spark.variable("registration", registrationInfo, STRING);
   Spark.function("Register", registrar);
+  Spark.function("lastGTrip5", lastGTrip);
 
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
@@ -345,9 +361,13 @@ void loop()
         	sensorCode.toCharArray(cloudMsg, sensorCode.length() + 1 );  // publish to cloud
         	cloudMsg[sensorCode.length() + 2] = '\0';  // add in the string null terinator
 
-        	// send notification of new sensor trip for web page
-//        	publishEvent(String(i));
 
+#if SEND_EVENTS_TO_WEBPAGE
+          // send notification of new sensor trip for web page
+          // This can send events too fast, so it is ifdef'd until
+          // we get a send queue for publishing
+        	publishEvent(String(i));
+#endif
         	// determine type of sensor and process accordingly
         	if(i <= MAX_PIR)    	// then the sensor is a PIR
         	{
@@ -355,13 +375,20 @@ void loop()
         	}
         	else                	// not a PIR, then a door sensor
         	{
-            if (i <= MAX_DOOR) {
+            if (i <= MAX_DOOR)
+            {
             	processDoorSensor(i);
         	  }
             else
             {
               processSensor(i);
             }
+          }
+
+          if (i == ALARM_SENSOR) {
+
+            sparkPublish("SISAlarm", "Alarm sensor trip", 60 );
+
           }
 
            	// code to blink the D7 LED when a sensor trip is detected
@@ -642,6 +669,7 @@ void processSensor(int sensorIndex)
 {
 
 	logSensor(sensorIndex);
+  lastGenericTrip = sensorIndex;
 
 	return;
 
@@ -1249,6 +1277,46 @@ String cBufRead(int offset)
 
 }
 /****************************************** end of cBufRead() ***************************************/
+
+
+/****************************************** lastGTrip () ************************/
+// Public Spark Function
+// pass in the value of the sensor position of interest
+// if the lastGenericTrip was that value then return 1, else return 0
+//
+int lastGTrip(String data)
+{
+
+  //xxx debug only
+  static int counter;
+  counter++;
+  String msg = String(counter);
+  sparkPublish("lastGTrip", msg , 5);
+
+  int retCode = 0;
+  return counter;
+
+/*
+  int returnValue = 0;
+  int positionToTest = data.toInt(); //returns 0 for non numeric data
+
+  if (lastGenericTrip == positionToTest)
+  {
+
+    returnValue = 1;
+    lastGenericTrip = 0;
+
+  }
+
+  return returnValue;
+*/
+
+  return 1;
+}
+
+
+/****************************************** end of lastGTrip () ****************/
+
 
 
 #ifdef TESTRUN
