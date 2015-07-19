@@ -1,6 +1,7 @@
 //#define SEND_EVENTS_TO_WEBPAGE // if on will send the events needed for the
                                  // config web page to display live events
 //#define TESTRUN
+//define DEBUG                   // turns on Serial port messages
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
 //#define DEBUG_ADVISORY
@@ -15,10 +16,14 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08e.  6/02/15.  Spark Only.
+//  Version 08f.  7/19/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// Version 8.0f: Added reportFatalError to blink D7 to show error code. Used this
+//  in setup() to indicate that the time never synced with the internet. Also added
+//  a Spark.process() in the time code in case that will help.
+//
 // Version 8.0e: Added a global variable ALARM_SENSOR = 11. If a sensor is tripped
 //  we test for this location. If this matches then we publish an SISAlarm. This
 //  can be monitored by IFTTT to do something more agressive, such as dialing a phone.
@@ -248,6 +253,8 @@ boolean comatose = false;   // patient is not moving
 void setup()
 {
 
+
+
   // Use D7 LED as a test indicator.  Light it for one second at setup time
   pinMode(D7, OUTPUT);
   digitalWrite(D7, HIGH);
@@ -255,11 +262,11 @@ void setup()
   // select virtual device on the eeprom
   if(VIRTUAL_DEVICE_NUM < MAX_VIRTUAL_DEVICES)
   {
-	eepromOffset = VIRTUAL_DEVICE_NUM * VIRTUAL_DEVICE_SIZE;
+    eepromOffset = VIRTUAL_DEVICE_NUM * VIRTUAL_DEVICE_SIZE;
   }
   else
   {
-	eepromOffset = MAX_VIRTUAL_DEVICES - 1;
+    eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
 	// initialize the I2C comunication
@@ -268,7 +275,7 @@ void setup()
   Wire.begin();
 
   #ifdef DEBUG
-	Serial.begin(9600);
+	 Serial.begin(9600);
   #endif
 
   pinMode(INTERRUPT_315, INPUT);
@@ -281,10 +288,18 @@ void setup()
   restoreConfig();
 
   // wait for the Core to synchronise time with the Internet
-  while(Time.year() <= 1970)
+  while(Time.year() <= 1970 && millis() < 30000)
   {
   	delay(100);
+    Spark.process();
   }
+
+  if (Time.year() <= 1970)
+  {
+    reportFatalError(3);
+    //never returns from here
+  }
+
 
   // Publish local configuration information in config[]
   resetTime = Time.now();    	// the current time = time of last reset
@@ -310,6 +325,10 @@ void setup()
 
 
   digitalWrite(D7, LOW);
+
+#ifdef DEBUG
+  Serial.println("End of setup()");
+#endif
 
 }
 
@@ -1693,3 +1712,58 @@ String makeNameValuePair(String name, String value)
 }
 
 /********************************* end of publishEvent() *******************************/
+
+/********************************* fatal error code reporting *******************************/
+// Call this to flash D7 continuously. This routine never exits.
+//
+// Error codes
+//    3 flashes:  Failed to sync time to internet. Action: power cycle
+//
+void reportFatalError(int errorNum)
+{
+
+#ifdef DEBUG
+    String message = "unknown error code";
+    Serial.print("Fatal Error: ");
+    switch(errorNum)
+    {
+    case 3:
+      message = " could not sync time to internet";
+      break;
+    default:
+      break;
+    }
+    Serial.println(message);
+    Spark.process();
+#endif
+
+  while(true)  // never ending loop
+  {
+    for (int i=0; i < errorNum; i++)
+    {
+      digitalWrite(D7, HIGH);
+      delay(100);
+      Spark.process();
+      digitalWrite(D7, LOW);
+      delay(100);
+      Spark.process();
+    }
+    digitalWrite(D7, LOW);
+
+    // Now LED off for 1500 milliseconds
+    for (int i=0; i < 3; i++)
+    {
+      delay(500);
+      Spark.process();
+    }
+  }
+
+  // we will never get here.
+  return;
+
+}
+
+
+
+
+/********************************* fatal error code reporting *******************************/
