@@ -6,6 +6,7 @@
 //#define DEBUG_EVENT
 //#define DEBUG_ADVISORY
 //#define DEBUG_COMMANDS
+#define photon044                 // when present, enables functions that only work with 0.4.4
 #define CLOUD_LOG
 //
 // Temporary fix for I2C library issue with Photon
@@ -16,10 +17,11 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08f.  7/19/15.  Spark Only.
+//  Version 08g.  8/9/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// Version 08g - New #define for photon v0.4.4-rc2. The Spark.timeSync() daily call works.
 // Version 8.0f: Added reportFatalError to blink D7 to show error code. Used this
 //  in setup() to indicate that the time never synced with the internet. Also added
 //  a Spark.process() in the time code in case that will help.
@@ -453,12 +455,14 @@ void loop()
   	simulateSensor();
   #endif
 
+#ifdef photon044
   // resync Time to the cloud once per day
   if (millis() - lastTimeSync > ONE_DAY_IN_MILLIS)
   {
-//	Spark.syncTime();
-	lastTimeSync = millis();
+ 	  Spark.syncTime();
+	  lastTimeSync = millis();
   }
+#endif
 
   // Testing for "person not home"
   if(lastSensorIsDoor && (personHome == HOME) && ((Time.now() - lastDoorTime) > AWAY))
