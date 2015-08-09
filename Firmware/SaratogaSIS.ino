@@ -17,10 +17,12 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08g.  8/9/15.  Spark Only.
+//  Version 08h.  8/9/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// Version 08h - added serial debug error message if spark.publish fails. Protected
+//  by ifdef photon044
 // Version 08g - New #define for photon v0.4.4-rc2. The Spark.timeSync() daily call works.
 // Version 8.0f: Added reportFatalError to blink D7 to show error code. Used this
 //  in setup() to indicate that the time never synced with the internet. Also added
@@ -116,7 +118,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08e";   	// current firmware version
+const String VERSION = "S08h";   	// current firmware version
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -1694,10 +1696,30 @@ int publishEvent(String sensorIndex)
 
 int sparkPublish (String eventName, String msg, int ttl)
 {
+  int err = 0;
+
 	if (millis() > 5000 )  // don't publish until spark has a chance to settle down
 	{
-    	Spark.publish(eventName, msg, ttl, PRIVATE);
+    #ifdef photon044
+    	err = Spark.publish(eventName, msg, ttl, PRIVATE);
+    #endif
+    
+    #ifndef photon044
+      //  A return code from spark.publish is only supported on photo 0.4.4 and later
+      Spark.publish(eventName, msg, ttl, PRIVATE);
+    #endif
 	}
+
+
+  #ifdef DEBUG
+    if (err) {
+      String message = "Spark.publish failed";
+      Serial.print(message);
+      message = "trying to publish " + eventName + ": " + msg;
+      Serial.print(message);
+      Spark.process();
+    }
+  #endif
 
 }
 
