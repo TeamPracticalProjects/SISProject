@@ -788,8 +788,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             getSparkCoreVariable("circularBuff", function(data) {
 
               if (data) {
-
-                commandOutputAdd(data);
+                var message = massageSensorLog(data);
+                commandOutputAdd(message);
+                //commandOutputAdd(data);
                 _sparkCoreData.SensorLog[_sparkCoreData.SensorLog.length] = data;
                 iterateSensorLog(buffPosition);
 
@@ -808,6 +809,36 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         });
       }
     },
+
+    massageSensorLog = function(sensorLogData) {
+    // turn the sensor log record into the displayable output
+
+        var message = "";
+        // find the epoc date
+        var locationEpoch = sensorLogData.indexOf("epoch:");
+        if (locationEpoch > 0) {
+            var locationEnd = sensorLogData.lastIndexOf(")");
+            var epochTimeString = sensorLogData.substring(locationEpoch+6,locationEnd-1);
+            var epochTimeNumber = Number(epochTimeString);
+
+            var epochDate = new Date(0);
+            var temp = epochDate.getTimezoneOffset();
+            var timezoneDiff = (_sparkCoreData.utcOffset * -60) - epochDate.getTimezoneOffset();
+            epochTimeNumber = epochTimeNumber + (timezoneDiff * 60);
+
+            epochDate.setUTCSeconds(epochTimeNumber);
+            var epochDateString = epochDate.toLocaleString();
+            message = "At " + epochDateString + ": " + sensorLogData ;
+        }
+        else
+        {
+            message = "could not find epoch date";
+        }
+        return message;
+
+    },
+
+
 
     // ------- Sensor Configuration ------------------
     // These fuctions will contact the SIS firmware and get a list of what
