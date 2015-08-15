@@ -1703,7 +1703,7 @@ int sparkPublish (String eventName, String msg, int ttl)
     #ifdef photon044
     	err = Spark.publish(eventName, msg, ttl, PRIVATE);
     #endif
-    
+
     #ifndef photon044
       //  A return code from spark.publish is only supported on photo 0.4.4 and later
       Spark.publish(eventName, msg, ttl, PRIVATE);
