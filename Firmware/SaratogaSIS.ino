@@ -1,7 +1,7 @@
 //#define SEND_EVENTS_TO_WEBPAGE // if on will send the events needed for the
                                  // config web page to display live events
 //#define TESTRUN
-//define DEBUG                   // turns on Serial port messages
+//#define DEBUG                   // turns on Serial port messages
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
 //#define DEBUG_ADVISORY
@@ -17,10 +17,14 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08h.  8/9/15.  Spark Only.
+//  Version 08i.  8/9/15.  Spark Only.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// version 08i - Added new process to publish circular buffer events to the cloud only
+//  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
+//  send. Also removed the lastGTrip functionality introduced in 08d; turns out IFTTT didn't
+//  work the way we thought.
 // Version 08h - added serial debug error message if spark.publish fails. Protected
 //  by ifdef photon044
 // Version 08g - New #define for photon v0.4.4-rc2. The Spark.timeSync() daily call works.
@@ -121,7 +125,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08h";   	// current firmware version
+const String VERSION = "S08i";   	// current firmware version
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -221,21 +225,35 @@ String observeDST = "yes";	// no" if locale does not observe DST
 int eepromOffset;
 
 	// array to hold parsed substrings from a command string
-String dest[MAX_SUBSTRINGS];
+String g_dest[MAX_SUBSTRINGS];
 
 	// Strings to publish data to the cloud
 String sensorCode = String("");
-String bufferReadout = String("");
+String g_bufferReadout = String("");
 char cloudMsg[80];  	// buffer to hold last sensor tripped message
 char cloudBuf[90];  	// buffer to hold message read out from circular buffer
 char registrationInfo[80]; // buffer to hold information about registered sensors
-String cBuf[BUF_LEN];   // circular buffer to store sensor trip messages
+
+String cBuf[BUF_LEN];   // circular buffer to store events and messages as they happen
+                        // Expected format of the string stored in cBuf is:
+                        // TYPE,SEQUENCENUMBER,INDEX,EPOCTIME
+                        // where
+                        //    TYPE is A (advisory) or S (sensor)
+                        //    SEQUENCENUMBER is a monotonically increasing global (eventNumber)
+                        //    INDEX is into sensorName[] for type sensor
+                        //          or into messages[] for type advisory
+                        //    EPOCTIME is when the entry happened
+                        // see cBufInsert(), cBufRead(), readFromBuffer(), logSensor(), logMessage()
+
 int head = 0;       	// index of the head of the circular buffer
 int tail = 0;       	// index of the tail of the buffer
+int g_numToPublish = -1; // Number of entries in cBuf[] that remain to be published to spark cloud.
+                         // This is incremented when events are added to the cBuf[] and decremented
+                         // when an entry is published to the spark cloud.
+
 char config[120];    	// buffer to hold local configuration information
 long eventNumber = 0;   // grows monotonically to make each event unique
-int lastGenericTrip = 0;  // config position of last sensor above MAX_DOOR to trip
-                          // Used by lastGTrip().
+
 
 #if defined(DEBUG_EVENT) || defined(DEBUG_ADVISORY) || defined(DEBUG_COMMANDS)
 	const unsigned long FILTER_TIME_UNREGISTERED = 5000L; // same as above, but for unregistered sensors
@@ -316,7 +334,6 @@ void setup()
   Spark.variable("circularBuff", cloudBuf, STRING);
   Spark.variable("registration", registrationInfo, STRING);
   Spark.function("Register", registrar);
-  Spark.function("lastGTrip5", lastGTrip);
 
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
@@ -326,7 +343,6 @@ void setup()
   {
   	lastTripTime[i] = 0L;
   }
-
 
   digitalWrite(D7, LOW);
 
@@ -341,6 +357,7 @@ void setup()
 /**************************************** loop() ***********************************************/
 void loop()
 {
+
   boolean knownCode = false;
   static unsigned long lastTimeSync = millis();  // to resync time with the cloud daily
   static boolean blinkReady = true;  // to know when non-blocking blink is ready to be triggered
@@ -379,9 +396,9 @@ void loop()
         	#endif
 
         	#ifdef DEBUG_EVENT
-            	debugLogMessage = "Event: ";
-            	debugLogMessage += String(sensorName[i]);
-            	publishDebugRecord(debugLogMessage);
+            	debug = "Event: ";
+            	debug += String(sensorName[i]);
+            	publishDebugRecord(debug);
         	#endif
 
         	sensorCode.toCharArray(cloudMsg, sensorCode.length() + 1 );  // publish to cloud
@@ -441,9 +458,9 @@ void loop()
         	if((now - lastUnregisteredTripTime) > FILTER_TIME_UNREGISTERED) // filter out multiple codes
         	{
             	lastUnregisteredTripTime = now;
-            	debugLogMessage = "Event: Unknown code ";
-            	debugLogMessage += String(receivedSensorCode);
-            	publishDebugRecord(debugLogMessage);
+            	debug = "Event: Unknown code ";
+            	debug += String(receivedSensorCode);
+            	publishDebugRecord(debug);
         	}
     	#endif
 	}
@@ -486,10 +503,14 @@ void loop()
   	comatose = true;
   }
 
+  #ifdef CLOUD_LOG
+    publishCircularBuffer();  // pushes new events to the cloud, if needed
+  #endif
+
 }
 /************************************ end of loop() ********************************************/
 
-/************************************ logMessage() *********************************************/
+/************************************ () *********************************************/
 // logMessage(): function to create a log entry that is an advisory message.
 //
 // Arguments:
@@ -535,12 +556,6 @@ void logMessage(int messageIndex)
     	debugLogMessage += String(messages[messageIndex]);
     	publishDebugRecord(debugLogMessage);
 	#endif
-
-    #ifdef CLOUD_LOG
-        char localBuf[90];
-        readFromBuffer(0, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
-        Spark.publish("LogEntry", localBuf);  // ... and publish it to the cloud for xteranl logging
-    #endif
 
 	return;
 }
@@ -591,12 +606,6 @@ void logSensor(int sensorIndex)
 	}
 
 	cBufInsert("" + logEntry);
-
-	#ifdef CLOUD_LOG
-        char localBuf[90];
-        readFromBuffer(0, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
-        Spark.publish("LogEntry", localBuf);  // ... and publish it to the cloud for xteranl logging
-    #endif
 
 	return;
 }
@@ -696,8 +705,7 @@ void processDoorSensor(int sensorIndex)
 void processSensor(int sensorIndex)
 {
 
-	logSensor(sensorIndex);
-  lastGenericTrip = sensorIndex;
+    logSensor(sensorIndex);
 
 	return;
 
@@ -906,7 +914,7 @@ void i2cEepromReadPage( int deviceAddress, unsigned int eeAddressPage, char* buf
 //
 //  This functions uses the following global constants and variables:
 //  	const int MAX_SUBSTRINGS -- nominal value is 6
-//  	String dest[MAX_SUBSTRINGS] -- array of Strings to hold the parsed out substrings
+//  	String g_dest[MAX_SUBSTRINGS] -- array of Strings to hold the parsed out substrings
 
 int parser(String source)
 {
@@ -923,7 +931,7 @@ int parser(String source)
     	{
         	presentComma = source.length();
     	}
-    	dest[index++] = "" + source.substring(lastComma, presentComma);
+      g_dest[index++] = "" + source.substring(lastComma, presentComma);
     	lastComma = presentComma + 1;
 
 	} while( (lastComma < source.length() ) && (index < MAX_SUBSTRINGS) );
@@ -1018,38 +1026,38 @@ int registrar(String action)
     	return -1;
 	}
 
-	// determine the command in dest[0]
-	if(dest[0] == "read")
+	// determine the command in g_dest[0]
+	if(g_dest[0] == "read")
 	{
     	requestedAction = READ;
 	}
 	else
 	{
-    	if(dest[0] == "delete")
+    	if(g_dest[0] == "delete")
     	{
         	requestedAction = DELETE;
     	}
     	else
     	{
-        	if(dest[0] == "register")
+        	if(g_dest[0] == "register")
         	{
             	requestedAction = REG;
         	}
         	else
         	{
-            	if(dest[0] == "offset")
+            	if(g_dest[0] == "offset")
             	{
                 	requestedAction = OFFSET;
             	}
             	else
             	{
-                	if(dest[0] == "DST")
+                	if(g_dest[0] == "DST")
                 	{
                     	requestedAction = DST;
                 	}
                 	else
                 	{
-                    	if(dest[0] == "store")
+                    	if(g_dest[0] == "store")
                     	{
                         	requestedAction = STORE;
                     	}
@@ -1064,8 +1072,8 @@ int registrar(String action)
     	}
 	}
 
-	// obtain the location from dest[1]
-	location = dest[1].toInt();
+	// obtain the location from g_dest[1]
+	location = g_dest[1].toInt();
 
 	// perform the requested action
 
@@ -1119,17 +1127,17 @@ int registrar(String action)
         	}
 
         	// perform the new sensor registration function
-        	sensorName[location] = dest[3];
-        	activateCode[location] = dest[2].toInt();
+        	sensorName[location] = g_dest[3];
+        	activateCode[location] = g_dest[2].toInt();
         	break;
 
     	case OFFSET:
-        	utcOffset = "" + dest[1];
+        	utcOffset = "" + g_dest[1];
         	publishConfig();
         	break;
 
     	case DST:
-        	observeDST = "" + dest[1];
+        	observeDST = "" + g_dest[1];
         	publishConfig();
         	break;
 
@@ -1173,8 +1181,8 @@ int readBuffer(String location)
 /*********************************end of readBuffer() *****************************************/
 
 /********************************** readFromBuffer() ******************************************/
-// readFromBuffer(): utility fujction to read from the circular buffer into the designated
-//  character array.
+// readFromBuffer(): utility fujction to read from the circular buffer into the
+//  character array passed in as stringPtr[].
 //  Arguments:
 //      int offset: the offset into the circular buffer to read from. 0 is the latest entry.  The
 //          next to latest entry is 1, etc. back to BUF_LEN -1.
@@ -1182,6 +1190,11 @@ int readBuffer(String location)
 //       	BUF_LEN - 1, the value that is read out is the oldest value in the buffer, and
 //       	-1 is returned by the function.  Otherwise, the value is determined by location
 //       	and 0 is returned by this function.
+//      char stringPtr[]: pointer to the string that will be returned from this
+//        function. The format of the string expected by the web site is one of:
+//            (S:nnn) SENSORNAME tripped at DATETIME Z (epoc:EPOCTIME)
+//            (S:nnn) SENSORNUMBER detected at DATETIME Z (epoc:EPOCTIME)
+//
 //  Return:  0 if a valid location was specified, otherwise, -1.
 
 int readFromBuffer(int offset, char stringPtr[])
@@ -1200,53 +1213,55 @@ int readFromBuffer(int offset, char stringPtr[])
 	}
 
 
-	// now retrieve the data requested from the circular buffer and place the result string in cloudBuf
-	bufferReadout = "" + cBufRead(offset);
+	// now retrieve the data requested from the circular buffer and place the result string
+  // in g_bufferReadout
+	g_bufferReadout = "" + cBufRead(offset);
 
 	#ifdef DEBUG
-    	Serial.println(bufferReadout);
+    	Serial.println(g_bufferReadout);
 	#endif
 
 	// create the readout string for the cloud from the buffer data
-	if(bufferReadout != "")  // skip empty log entries
+	if(g_bufferReadout != "")  // skip empty log entries
 	{
     	int index;
 
     	// parse the comma delimited string into its substrings
-    	parser(bufferReadout);
+      // result of parse is in global array g_dest[]
+    	parser(g_bufferReadout);
 
-    	// format the sequence number and place into bufferReadout
-    	bufferReadout = "(S:";
-    	bufferReadout += dest[1];
-    	bufferReadout += ")";
+    	// format the sequence number and place into g_bufferReadout
+      g_bufferReadout = "(S:";
+      g_bufferReadout += g_dest[1];
+      g_bufferReadout += ")";
 
     	// Determine message type
-    	if(dest[0] == "S")  	// sensor type message
+    	if(g_dest[0] == "S")  	// sensor type message
     	{
 
         	// format the sensor Name from the index
-        	index = dest[2].toInt();
-        	bufferReadout += sensorName[index];
-        	bufferReadout += " tripped at ";
+        	index = g_dest[2].toInt();
+          g_bufferReadout += sensorName[index];
+          g_bufferReadout += " tripped at ";
     	}
     	else    	// advisory type message
     	{
-        	bufferReadout += dest[2];
-        	bufferReadout += " detected at ";
+        g_bufferReadout += g_dest[2];
+        g_bufferReadout += " detected at ";
     	}
 
     	// add in the timestamp
 
-    	index = dest[3].toInt();
-    	bufferReadout += Time.timeStr(index).c_str();
-    	bufferReadout += " Z (epoch:";
-    	bufferReadout += dest[3];
-    	bufferReadout += "Z)";
+    	index = g_dest[3].toInt();
+      g_bufferReadout += Time.timeStr(index).c_str();
+      g_bufferReadout += " Z (epoch:";
+      g_bufferReadout += g_dest[3];
+      g_bufferReadout += "Z)";
 
 	}
 
-	bufferReadout.toCharArray(stringPtr, bufferReadout.length() + 1 );
-	stringPtr[bufferReadout.length() + 2] = '\0';
+    g_bufferReadout.toCharArray(stringPtr, g_bufferReadout.length() + 1 );
+	stringPtr[g_bufferReadout.length() + 2] = '\0';
 
 	return result;
 
@@ -1265,6 +1280,7 @@ void cBufInsert(String data)
   static boolean fullBuf = false;	// false for the first pass (empty buffer locations)
 
   cBuf[tail] = data;	// write the data at the end of the buffer
+  g_numToPublish++;     // note that there is a new buffer entry to publish
 
   //  adjust the tail pointer to the next location in the buffer
   tail++;
@@ -1288,7 +1304,8 @@ void cBufInsert(String data)
 // cBufRead():  read back a String object from the "offset" location in the cirular buffer.  The
 //	offset location of zero is the latest value in (tail of) the circular buffer.
 //  Arguments:
-//	int offset:  the offset into the buffer where zero is the tail of the circular buffer.
+//	int offset:  the offset into the buffer where zero is the most recent entry in the circular buffer
+//       and 1 is the next most recent, etc.
 //  Return:  the String at the offset location in the circular buffer.
 
 String cBufRead(int offset)
@@ -1298,7 +1315,7 @@ String cBufRead(int offset)
   locationInBuffer = tail -1 - offset;
   if(locationInBuffer < 0)
   {
-	locationInBuffer += BUF_LEN;
+    locationInBuffer += BUF_LEN;
   }
 
   return cBuf[locationInBuffer];
@@ -1307,43 +1324,44 @@ String cBufRead(int offset)
 /****************************************** end of cBufRead() ***************************************/
 
 
-/****************************************** lastGTrip () ************************/
-// Public Spark Function
-// pass in the value of the sensor position of interest
-// if the lastGenericTrip was that value then return 1, else return 0
+
+/****************************************** publishCircularBuffer () ************************/
+// publishCircularBuffer()
 //
-int lastGTrip(String data)
-{
+// This routine publishes recent events in the circular buffer cBuf[] to the Spark Cloud. It
+// uses the global variable g_numToPublish to keep track of how many events are awaiting publication.
+// It uses a local static variable to be sure that events are not published more frequently than once
+// every 2 seconds.
+// This routine is called once each time through the main loop. It could be called anytime.
+//
+void publishCircularBuffer() {
 
-  //xxx debug only
-  static int counter;
-  counter++;
-  String msg = String(counter);
-  sparkPublish("lastGTrip", msg , 5);
+    static unsigned long lastPublishTime = 0;
 
-  int retCode = 0;
-  return counter;
+    if (g_numToPublish >= 0 ) {
 
-/*
-  int returnValue = 0;
-  int positionToTest = data.toInt(); //returns 0 for non numeric data
+        unsigned long currentTime = millis();
+        if (currentTime - lastPublishTime > 4000)
+        {
 
-  if (lastGenericTrip == positionToTest)
-  {
+            char localBuf[90];
 
-    returnValue = 1;
-    lastGenericTrip = 0;
+            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
+            g_numToPublish--;
 
-  }
+            sparkPublish("LogEntry", localBuf, 60);  // ... and publish it to the cloud for xteranl logging
+            lastPublishTime = currentTime;
 
-  return returnValue;
-*/
+        }
 
-  return 1;
+    }
+
 }
 
 
-/****************************************** end of lastGTrip () ****************/
+
+/****************************************** End of publishCircularBuffer () ************************/
+
 
 
 
@@ -1374,7 +1392,8 @@ void simulateSensor() {
   unsigned long simCurrentTime = millis() - simStartTime; // what is the current simulation time?
 
   int i = simLastEventFired + 1;
-  while (i < SIMULATE_EVENTS_MAX) {   // check each simulation event after the last one we tripped
+  while (i < SIMULATE_EVENTS_MAX)
+  {   // check each simulation event after the last one we tripped
 
 	if (simCurrentTime > simEvents[i].simTime){  // if we are later in simulation than time of an event, trip it
 
@@ -1699,12 +1718,12 @@ int publishEvent(String sensorIndex)
 
 int sparkPublish (String eventName, String msg, int ttl)
 {
-  int err = 0;
+  bool success = true;
 
 	if (millis() > 5000 )  // don't publish until spark has a chance to settle down
 	{
     #ifdef photon044
-    	err = Spark.publish(eventName, msg, ttl, PRIVATE);
+        success = Spark.publish(eventName, msg, ttl, PRIVATE);
     #endif
 
     #ifndef photon044
@@ -1715,13 +1734,17 @@ int sparkPublish (String eventName, String msg, int ttl)
 
 
   #ifdef DEBUG
-    if (err) {
+    Serial.println("sparkPublish called");
+
+    if (success == false)
+    {
       String message = "Spark.publish failed";
       Serial.print(message);
       message = "trying to publish " + eventName + ": " + msg;
       Serial.print(message);
       Spark.process();
     }
+
   #endif
 
 }
