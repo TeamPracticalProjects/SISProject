@@ -1214,7 +1214,7 @@ int readFromBuffer(int offset, char stringPtr[])
 
 
 	// now retrieve the data requested from the circular buffer and place the result string
-  // in g_bufferReadout
+    // in g_bufferReadout
 	g_bufferReadout = "" + cBufRead(offset);
 
 	#ifdef DEBUG
@@ -1227,36 +1227,36 @@ int readFromBuffer(int offset, char stringPtr[])
     	int index;
 
     	// parse the comma delimited string into its substrings
-      // result of parse is in global array g_dest[]
+        // result of parse is in global array g_dest[]
     	parser(g_bufferReadout);
 
     	// format the sequence number and place into g_bufferReadout
-      g_bufferReadout = "(S:";
-      g_bufferReadout += g_dest[1];
-      g_bufferReadout += ")";
+        g_bufferReadout = "(S:";
+        g_bufferReadout += g_dest[1];
+        g_bufferReadout += ")";
 
-    	// Determine message type
+        // Determine message type
     	if(g_dest[0] == "S")  	// sensor type message
     	{
 
         	// format the sensor Name from the index
         	index = g_dest[2].toInt();
-          g_bufferReadout += sensorName[index];
-          g_bufferReadout += " tripped at ";
+            g_bufferReadout += sensorName[index];
+            g_bufferReadout += " tripped at ";
     	}
     	else    	// advisory type message
     	{
-        g_bufferReadout += g_dest[2];
-        g_bufferReadout += " detected at ";
+            g_bufferReadout += g_dest[2];
+            g_bufferReadout += " detected at ";
     	}
 
     	// add in the timestamp
 
     	index = g_dest[3].toInt();
-      g_bufferReadout += Time.timeStr(index).c_str();
-      g_bufferReadout += " Z (epoch:";
-      g_bufferReadout += g_dest[3];
-      g_bufferReadout += "Z)";
+        g_bufferReadout += Time.timeStr(index).c_str();
+        g_bufferReadout += " Z (epoch:";
+        g_bufferReadout += g_dest[3];
+        g_bufferReadout += "Z)";
 
 	}
 
