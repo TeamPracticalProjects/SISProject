@@ -17,10 +17,12 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08i.  8/9/15.  Spark Only.
+//  Version 08i1.  8/9/15.  Spark Only.
+const String VERSION = "S08i1";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
 //  send. Also removed the lastGTrip functionality introduced in 08d; turns out IFTTT didn't
@@ -125,7 +127,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08i";   	// current firmware version
+
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -1214,7 +1216,7 @@ int readFromBuffer(int offset, char stringPtr[])
 
 
 	// now retrieve the data requested from the circular buffer and place the result string
-  // in g_bufferReadout
+    // in g_bufferReadout
 	g_bufferReadout = "" + cBufRead(offset);
 
 	#ifdef DEBUG
@@ -1227,36 +1229,36 @@ int readFromBuffer(int offset, char stringPtr[])
     	int index;
 
     	// parse the comma delimited string into its substrings
-      // result of parse is in global array g_dest[]
+        // result of parse is in global array g_dest[]
     	parser(g_bufferReadout);
 
     	// format the sequence number and place into g_bufferReadout
-      g_bufferReadout = "(S:";
-      g_bufferReadout += g_dest[1];
-      g_bufferReadout += ")";
+        g_bufferReadout = "(S:";
+        g_bufferReadout += g_dest[1];
+        g_bufferReadout += ")";
 
-    	// Determine message type
+        // Determine message type
     	if(g_dest[0] == "S")  	// sensor type message
     	{
 
         	// format the sensor Name from the index
         	index = g_dest[2].toInt();
-          g_bufferReadout += sensorName[index];
-          g_bufferReadout += " tripped at ";
+            g_bufferReadout += sensorName[index];
+            g_bufferReadout += " tripped at ";
     	}
     	else    	// advisory type message
     	{
-        g_bufferReadout += g_dest[2];
-        g_bufferReadout += " detected at ";
+            g_bufferReadout += g_dest[2];
+            g_bufferReadout += " detected at ";
     	}
 
     	// add in the timestamp
 
     	index = g_dest[3].toInt();
-      g_bufferReadout += Time.timeStr(index).c_str();
-      g_bufferReadout += " Z (epoch:";
-      g_bufferReadout += g_dest[3];
-      g_bufferReadout += "Z)";
+        g_bufferReadout += Time.timeStr(index).c_str();
+        g_bufferReadout += " Z (epoch:";
+        g_bufferReadout += g_dest[3];
+        g_bufferReadout += "Z)";
 
 	}
 
@@ -1346,10 +1348,13 @@ void publishCircularBuffer() {
 
             char localBuf[90];
 
-            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
-            g_numToPublish--;
+            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into localBuf
 
-            sparkPublish("LogEntry", localBuf, 60);  // ... and publish it to the cloud for xteranl logging
+            if(sparkPublish("LogEntry", localBuf, 60))     // ... and publish it to the cloud for xteranl logging
+            {
+                g_numToPublish--;
+
+            };
             lastPublishTime = currentTime;
 
         }
@@ -1733,7 +1738,7 @@ int sparkPublish (String eventName, String msg, int ttl)
 	}
 
 
-  #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("sparkPublish called");
 
     if (success == false)
@@ -1741,11 +1746,13 @@ int sparkPublish (String eventName, String msg, int ttl)
       String message = "Spark.publish failed";
       Serial.print(message);
       message = "trying to publish " + eventName + ": " + msg;
-      Serial.print(message);
+      Serial.println(message);
       Spark.process();
     }
 
-  #endif
+#endif
+
+  return success;
 
 }
 
