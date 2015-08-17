@@ -17,10 +17,12 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08i.  8/9/15.  Spark Only.
+//  Version 08i1.  8/9/15.  Spark Only.
+const String VERSION = "S08i1";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+// version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
 //  send. Also removed the lastGTrip functionality introduced in 08d; turns out IFTTT didn't
@@ -125,7 +127,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08i";   	// current firmware version
+
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -1346,10 +1348,13 @@ void publishCircularBuffer() {
 
             char localBuf[90];
 
-            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
-            g_numToPublish--;
+            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into localBuf
 
-            sparkPublish("LogEntry", localBuf, 60);  // ... and publish it to the cloud for xteranl logging
+            if(sparkPublish("LogEntry", localBuf, 60))     // ... and publish it to the cloud for xteranl logging
+            {
+                g_numToPublish--;
+
+            };
             lastPublishTime = currentTime;
 
         }
@@ -1733,7 +1738,7 @@ int sparkPublish (String eventName, String msg, int ttl)
 	}
 
 
-  #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("sparkPublish called");
 
     if (success == false)
@@ -1741,11 +1746,13 @@ int sparkPublish (String eventName, String msg, int ttl)
       String message = "Spark.publish failed";
       Serial.print(message);
       message = "trying to publish " + eventName + ": " + msg;
-      Serial.print(message);
+      Serial.println(message);
       Spark.process();
     }
 
-  #endif
+#endif
+
+  return success;
 
 }
 
