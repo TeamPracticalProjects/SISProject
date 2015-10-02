@@ -17,10 +17,14 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08i.  8/9/15.  Spark Only.
+//  Version 08i1.  8/9/15.  Spark Only.
+const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+
+// version 08j - added blinks in setup() to show progress.
+// version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
 //  send. Also removed the lastGTrip functionality introduced in 08d; turns out IFTTT didn't
@@ -125,7 +129,7 @@
 // Debugging via the serial port.  Comment the next line out to disable debugging mode
 //#define DEBUG
 /************************************* Global Constants ****************************************************/
-const String VERSION = "S08i";   	// current firmware version
+
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
 const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 4, which is D4 on an Spark
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
@@ -279,7 +283,7 @@ void setup()
 
   // Use D7 LED as a test indicator.  Light it for one second at setup time
   pinMode(D7, OUTPUT);
-  digitalWrite(D7, HIGH);
+
 
   // select virtual device on the eeprom
   if(VIRTUAL_DEVICE_NUM < MAX_VIRTUAL_DEVICES)
@@ -291,10 +295,22 @@ void setup()
     eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
 	// initialize the I2C comunication
   Wire.setSpeed(CLOCK_SPEED_100KHZ);
   Wire.stretchClock(false);
   Wire.begin();
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
 
   #ifdef DEBUG
 	 Serial.begin(9600);
@@ -306,8 +322,20 @@ void setup()
   attachInterrupt(INTERRUPT_315, isr315, CHANGE);   // 315 MHz receiver on interrupt 3 => that is pin #D3
   attachInterrupt(INTERRUPT_433, isr433, CHANGE);   // 433 MHz receiver on interrupt 4 => that is pin #D4
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
   // restore the saved configuration from non-volatile memory
   restoreConfig();
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
 
   // wait for the Core to synchronise time with the Internet
   while(Time.year() <= 1970 && millis() < 30000)
@@ -321,6 +349,11 @@ void setup()
     reportFatalError(3);
     //never returns from here
   }
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
 
 
   // Publish local configuration information in config[]
@@ -338,13 +371,18 @@ void setup()
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
   // Initialize the lastTripTime[] array
   for (int i = 0; i < MAX_WIRELESS_SENSORS; i++)
   {
   	lastTripTime[i] = 0L;
   }
 
-  digitalWrite(D7, LOW);
 
 #ifdef DEBUG
   Serial.println("End of setup()");
@@ -1226,7 +1264,7 @@ int readFromBuffer(int offset, char stringPtr[])
 	{
     	int index;
 
-    	// parse the comma delimited string into its substrings
+       // parse the comma delimited string into its substrings
       // result of parse is in global array g_dest[]
     	parser(g_bufferReadout);
 
@@ -1235,7 +1273,7 @@ int readFromBuffer(int offset, char stringPtr[])
       g_bufferReadout += g_dest[1];
       g_bufferReadout += ")";
 
-    	// Determine message type
+        // Determine message type
     	if(g_dest[0] == "S")  	// sensor type message
     	{
 
@@ -1346,10 +1384,13 @@ void publishCircularBuffer() {
 
             char localBuf[90];
 
-            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into the "cloudBuf" variable
-            g_numToPublish--;
+            readFromBuffer(g_numToPublish, localBuf);      // read out the latest logged entry into localBuf
 
-            sparkPublish("LogEntry", localBuf, 60);  // ... and publish it to the cloud for xteranl logging
+            if(sparkPublish("LogEntry", localBuf, 60))     // ... and publish it to the cloud for xteranl logging
+            {
+                g_numToPublish--;
+
+            };
             lastPublishTime = currentTime;
 
         }
@@ -1740,12 +1781,14 @@ int sparkPublish (String eventName, String msg, int ttl)
     {
       String message = "Spark.publish failed";
       Serial.print(message);
-      message = "trying to publish " + eventName + ": " + msg;
-      Serial.print(message);
+      message = " trying to publish " + eventName + ": " + msg;
+      Serial.println(message);
       Spark.process();
     }
 
   #endif
+
+  return success;
 
 }
 
