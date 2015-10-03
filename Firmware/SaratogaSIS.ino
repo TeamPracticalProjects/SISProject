@@ -17,7 +17,7 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08i1.  8/9/15.  Spark Only.
+//  Version 08j.  8/9/15.  Spark Only.
 const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
@@ -1252,7 +1252,7 @@ int readFromBuffer(int offset, char stringPtr[])
 
 
 	// now retrieve the data requested from the circular buffer and place the result string
-  // in g_bufferReadout
+    // in g_bufferReadout
 	g_bufferReadout = "" + cBufRead(offset);
 
 	#ifdef DEBUG
@@ -1266,12 +1266,13 @@ int readFromBuffer(int offset, char stringPtr[])
 
        // parse the comma delimited string into its substrings
       // result of parse is in global array g_dest[]
+
     	parser(g_bufferReadout);
 
     	// format the sequence number and place into g_bufferReadout
-      g_bufferReadout = "(S:";
-      g_bufferReadout += g_dest[1];
-      g_bufferReadout += ")";
+        g_bufferReadout = "(S:";
+        g_bufferReadout += g_dest[1];
+        g_bufferReadout += ")";
 
         // Determine message type
     	if(g_dest[0] == "S")  	// sensor type message
@@ -1279,22 +1280,22 @@ int readFromBuffer(int offset, char stringPtr[])
 
         	// format the sensor Name from the index
         	index = g_dest[2].toInt();
-          g_bufferReadout += sensorName[index];
-          g_bufferReadout += " tripped at ";
+            g_bufferReadout += sensorName[index];
+            g_bufferReadout += " tripped at ";
     	}
     	else    	// advisory type message
     	{
-        g_bufferReadout += g_dest[2];
-        g_bufferReadout += " detected at ";
+            g_bufferReadout += g_dest[2];
+            g_bufferReadout += " detected at ";
     	}
 
     	// add in the timestamp
 
     	index = g_dest[3].toInt();
-      g_bufferReadout += Time.timeStr(index).c_str();
-      g_bufferReadout += " Z (epoch:";
-      g_bufferReadout += g_dest[3];
-      g_bufferReadout += "Z)";
+        g_bufferReadout += Time.timeStr(index).c_str();
+        g_bufferReadout += " Z (epoch:";
+        g_bufferReadout += g_dest[3];
+        g_bufferReadout += "Z)";
 
 	}
 
@@ -1774,19 +1775,23 @@ int sparkPublish (String eventName, String msg, int ttl)
 	}
 
 
-  #ifdef DEBUG
+#ifdef DEBUG
     Serial.println("sparkPublish called");
 
     if (success == false)
     {
       String message = "Spark.publish failed";
       Serial.print(message);
+
       message = " trying to publish " + eventName + ": " + msg;
+
       Serial.println(message);
       Spark.process();
     }
 
-  #endif
+#endif
+
+  return success;
 
   return success;
 
