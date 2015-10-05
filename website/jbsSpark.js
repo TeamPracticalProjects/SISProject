@@ -365,32 +365,44 @@ SHRIMPWARE.SISTest = (function() { // private module variables
       console.log('Devices: ', devices);
       var outputElement = document.getElementById("deviceListOutput");
       //display all the devices on the web page
-      var devlist = spark.devices;
-      var output = 'Select a device<br><form >';
+      var devlist = devices;
+      var output = 'Select a device<br><form><select id="deviceSelect">';
+      output += '<option disabled selected >-- pick a device --</option>';
       var coreState = "";
       devlist.forEach(function(entry) {
         var connectedValue = "";
         if (entry.connected) {
           _sparkCoreData.connectedValue = true;
-          coreState = "Online";
+          coreState = "ONLINE";
         } else {
           _sparkCoreData.connectedValue = false;
           coreState = "Offline";
         }
+        output += '<option value="' + entry.id + '">' + entry.name + ' ' + coreState + '</option>';
+        /*
         output = output +
             '<input type="radio" name="device" value= "' + entry.id  +
             '" onClick="SHRIMPWARE.SISTest.activeDeviceSet(' + "'" +
             entry.id + "')" + '">&nbsp;' +
             entry.name + " <b>id:</b> " + entry.id + " <b>" +
             coreState + "</b><br>";
+        */
       });
-
+      output += '</select></form>';
       outputElement.innerHTML = output;
+      document.getElementById("deviceSelect").onchange = deviceSelectChanged;
       getAttributes();
     },
     devicesPrFalse = function(err) {
       logAdd('List devices call failed: ', err);
       document.getElementById("btnListAllDevices").disabled = false;
+    },
+    deviceSelectChanged = function() {
+        var selectList = document.getElementById("deviceSelect");
+        if (selectList.selectedIndex === 0)
+            return null;
+        activeDeviceSet(selectList.options[selectList.selectedIndex].value);
+
     },
 
 
@@ -1304,6 +1316,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     debugShow: debugShow,
     startMonitoring: startMonitoring,
     saveSensorConfig:saveSensorConfig,
-    clearSensorConfig:clearSensorConfig
+    clearSensorConfig:clearSensorConfig,
+    deviceSelectChanged:deviceSelectChanged
   };
 }());
