@@ -50,7 +50,7 @@
             </div>
 
             <div id='sensorSelectDiv' style="clear:both; width:400px; ">
-                <h3>Sensors to Configure</h3>
+                <h3>Sensors in this Configuration</h3>
                 Select one to set up:
                 <div id="sensorList">
 
@@ -73,13 +73,7 @@
             <div id="newSensorSetupDiv" style="width:500px">
                 <h4>Setup New Sensor</h4>
                 <div style="padding:0 0 0 20px">
-                    Optional: Clear Current SIS Config
-                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">Clear SIS Config</button>
-                    <br>
-                    <br> Optional: Review the sensor config
-                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
-                    <br>
-                    <br> Step 1: Click to begin.
+                    Step 1: Click to begin.
                     <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISTest.setNewSensorBegin()">Begin Setup</button>
                     <br>
                     <br> Step 2: Trip the new sensor, then click:
@@ -89,6 +83,12 @@
                     <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISTest.saveSensorConfig()">Save Sensor Setup</button>
                     <br>
                     <br>
+                    <br>Optional: Clear Current SIS Config
+                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">Clear SIS Config</button>
+                    <br>
+                    <br> Optional: Review the sensor config
+                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
+
                 </div>
                 <div id="sensorConfigOutput">
 
