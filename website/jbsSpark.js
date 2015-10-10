@@ -1,4 +1,6 @@
 "use strict"; // turn on strict mode
+/*jslint browser:true */
+/*jslint devel:true*/
 
 /* A set of functions to be used in testing the SIS from a web page.
   The web page should contain blank divs with the following id values:
@@ -64,51 +66,55 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISTest = (function() { // private module variables
-  var _version = 16 // Now relies on Config string from the Spark Core (v15 or later)
+  var _version = 18, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
+                    // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
 
-    , _expectedSISCoreVersion = 20 // this Javascript expects this SIS code in the core
+    _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
-    , _mainLoop = undefined  // timer that pops every 0.5 seconds, all the time
-    , _startDate = new Date() // time this javascript object was created
-    , _activeDevice = undefined  // object from spark.device() that we want to talk to
-    , _sparkCoreData = // used to hold the data that comes back from the SIS firmware
+    _mainLoop,  // timer that pops every 0.5 seconds, all the time
+    _startDate = new Date(), // time this javascript object was created
+    _activeDevice,  // object from spark.device() that we want to talk to
+    _sparkCoreData = // used to hold the data that comes back from the SIS firmware
         {
             SensorLog: [],
             SensorLogIsRefreshed: false,
             SensorConfig: [],
             SensorConfigIsRefreshed: false,
             LastSensorTrip: ''
-        }
-    , _lastHeartbeat = undefined // time that we last got a message from the spark cloud.
+        },
+    _lastHeartbeat, // time that we last got a message from the spark cloud.
                                  // used to determine if we have lost the connection
-    , _attributes = undefined // the attributes of our selected core, returned from the spark cloud
+    _attributes, // the attributes of our selected core, returned from the spark cloud
                               //how does this work when there is more than one core?
 
-    , _lastHandledPublishedEventNum = 0
+    _lastHandledPublishedEventNum = 0,
     // the last event number that has been handled
     // so we don't handle old published events
     // should probably have one per eventName
 
-    , _animationTimer1Sec // when screen needs to be animated, this pops once a second
+    _animationTimer1Sec, // when screen needs to be animated, this pops once a second
 
-    , _defaultBtnStyle
+    _defaultBtnStyle,
 
     // One function of the UI is to add a sensor code and description to the
     // configuration array in the SIS. These variables keep track of that activity
-    , _sensorPositionBeingConfigured = -1  // the position in the SIS core
+    _sensorPositionBeingConfigured = -1,  // the position in the SIS core
                                            // that we will assign the code to.
 
-    , _sensorDescriptionBeingConfigured = '' // the description we will set in the SIS
+    _sensorDescriptionBeingConfigured = '', // the description we will set in the SIS
 
-    , _eMode = { // the web page sets this so that we know what options to
+    _eMode = { // the web page sets this so that we know what options to
                  // provide to the user
         DoNothing : {},
         SIS : {value: 0, name: "SIS", sensorList: ""},
-        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", sensorList: ""}
-    }
-    , _eType = {   // Sensor layout based on the eMode that has been set
-        Generic: [
+        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup", sensorList: ""},
+        ConfigSaratoga: {value: 2, name: "ConfigSaratoga", title: "SIS Saratoga Townhouse Setup",sensorList: ""},
+        ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",sensorList: ""},
+        ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",sensorList: ""}
+    },
+    _eType = {   // Sensor layout based on the eMode that has been set
+        SmallApartment: [
             {pos: 0, label: "FrontRoomPIR", display: "Front Room PIR"},
             {pos: 1, label: "BedRoomPIR",   display: "Bed Room PIR"},
             {pos: 2, label: "BathPIR",      display: "Bath Room PIR"},
@@ -135,10 +141,27 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 9, label: "TwoPeopleHome",  display: "Two People Home"},
             {pos: 10, label: "NoOneHome",  display: "No One Home"},
             {pos: 11, label: "AlertButton", display: "Alert Button"}
+        ],
+        BigHouse: [
+            {pos: 0, label: "FamilyRoom1PIR",  display: "Family Room 1 PIR"},
+            {pos: 1, label: "FamilyRoom2PIR",   display: "Family Room 2 PIR"},
+            {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
+            {pos: 3, label: "Bedroom1PIR",   display: "Bedroom 1 PIR"},
+            {pos: 4, label: "Bedroom2PIR",   display: "Bedroom 2 PIR"},
+            {pos: 5, label: "Bedroom3PIR",   display: "Bedroom 3 PIR"},
+            {pos: 6, label: "OfficePIR",   display: "Office PIR"},
+            {pos: 7, label: "DiningroomPIR",   display: "Dining Room PIR"},
+            {pos: 8, label: "Otherroom1PIR",   display: "Other Room 1 PIR"},
+            {pos: 9, label: "Otherroom2PIR",   display: "Other Room 2 PIR"},
+            {pos: 10, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 11, label: "PatioDoorSep",  display: "Patio Door Separation"},
+            {pos: 12, label: "BackDoorSep",  display: "Back Door Separation"},
+            {pos: 13, label: "OtherDoorSep",  display: "Other Door Separation"},
+            {pos: 14, label: "AlertButton", display: "Alert Button"}
         ]
-    }
+    },
 
-    , _mode = _eMode.SIS    // 0 = SIS  1 = ConfigSmallApartment
+    _mode = _eMode.SIS    // 0 = SIS  1 = ConfigSmallApartment
 
     ;
   var
@@ -153,27 +176,31 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             break;
         case "ConfigSmallApartment":
             _mode = _eMode.ConfigSmallApartment;
-            _mode.sensorList = _eType.Generic;
+            _mode.sensorList = _eType.SmallApartment;
             break;
         case "ConfigSaratoga":
-            _mode = _eMode.ConfigSmallApartment;
+            _mode = _eMode.ConfigSaratoga;
             _mode.sensorList = _eType.Saratoga;
             break;
         case "ConfigElmStreet":
-            _mode = _eMode.ConfigSmallApartment;
+            _mode = _eMode.ConfigElmStreet;
             _mode.sensorList = _eType.ElmStreet;
+            break;
+        case "ConfigBigHouse":
+            _mode = _eMode.ConfigBigHouse;
+            _mode.sensorList = _eType.BigHouse;
             break;
         default:
             alert ('Your web page must call SHRIMPWARE.SIS.setMode with SIS or ConfigSmallApartment');
             _mode = _eMode.DoNothing;
             break;
-        };
+        }
     },
 
     setType = function(modeType) {
         switch (modeType){
         case "Default":
-            _mode.type = ""
+            _mode.type = "";
         }
 
     },
@@ -186,12 +213,16 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         document.getElementById("btnListAllDevices").disabled = true;
         disableDeviceButtons(true);
         _defaultBtnStyle = document.getElementById("btnGetSensorLog").style;
+        document.getElementById("configTitle").innerHTML = _mode.title;
         switch (_mode.name) {
         case "":
         case "SIS":
 
             break;
         case "ConfigSmallApartment":
+        case "ConfigElmStreet":
+        case "ConfigSaratoga":
+        case "ConfigBigHouse":
             document.getElementById("currentSensorDiv").style.display = "none";
             document.getElementById("newSensorSetupDiv").style.display = "none";
             document.getElementById("commandsDiv").style.display = "none";
@@ -215,6 +246,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             document.getElementById("btnGetSensorConfig").disabled = isDisabled;
             break;
         case "ConfigSmallApartment":
+        case "ConfigElmStreet":
+        case "ConfigSaratoga":
+        case "ConfigBigHouse":
             var ele = document.getElementsByName("sensor");
             for(var i=0;i<ele.length;i++) {
                 ele[i].checked = isDisabled;
@@ -239,8 +273,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     logAdd = function(message) {
         // adds message to top of the div debugLog with a timestamp
       var currentTime = new Date();
-      currentTime = currentTime.getHours() + ":" + currentTime.getMinutes()
-            + ":" + currentTime.getSeconds() + "." + currentTime.getMilliseconds();
+      currentTime = currentTime.getHours() + ":" + currentTime.getMinutes() +
+            ":" + currentTime.getSeconds() + "." + currentTime.getMilliseconds();
       currentTime = currentTime.valueOf();
       var logElement = document.getElementById("debugLog");
       var currentLog = logElement.innerHTML;
@@ -363,32 +397,44 @@ SHRIMPWARE.SISTest = (function() { // private module variables
       console.log('Devices: ', devices);
       var outputElement = document.getElementById("deviceListOutput");
       //display all the devices on the web page
-      var devlist = spark.devices;
-      var output = 'Select a device<br><form >';
+      var devlist = devices;
+      var output = 'Select a device<br><form><select id="deviceSelect">';
+      output += '<option disabled selected >-- pick a device --</option>';
       var coreState = "";
       devlist.forEach(function(entry) {
         var connectedValue = "";
         if (entry.connected) {
           _sparkCoreData.connectedValue = true;
-          coreState = "Online";
+          coreState = "ONLINE";
         } else {
           _sparkCoreData.connectedValue = false;
           coreState = "Offline";
         }
+        output += '<option value="' + entry.id + '">' + entry.name + ' ' + coreState + '</option>';
+        /*
         output = output +
             '<input type="radio" name="device" value= "' + entry.id  +
             '" onClick="SHRIMPWARE.SISTest.activeDeviceSet(' + "'" +
-            entry.id + "')" + '">&nbsp;'
-            + entry.name + " <b>id:</b> " + entry.id + " <b>"
-            + coreState + "</b><br>";
+            entry.id + "')" + '">&nbsp;' +
+            entry.name + " <b>id:</b> " + entry.id + " <b>" +
+            coreState + "</b><br>";
+        */
       });
-
+      output += '</select></form>';
       outputElement.innerHTML = output;
+      document.getElementById("deviceSelect").onchange = deviceSelectChanged;
       getAttributes();
     },
     devicesPrFalse = function(err) {
       logAdd('List devices call failed: ', err);
       document.getElementById("btnListAllDevices").disabled = false;
+    },
+    deviceSelectChanged = function() {
+        var selectList = document.getElementById("deviceSelect");
+        if (selectList.selectedIndex === 0)
+            return null;
+        activeDeviceSet(selectList.options[selectList.selectedIndex].value);
+
     },
 
 
@@ -464,6 +510,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         //and populate buttons for each on the web page
         //console.log("global activedevice: ", _activeDevice);
         //console.log("global attributes: ", attributes);
+      var x;
       logAdd("in listAttributes");
       if (_mode == _eMode.SIS) {
           disableDeviceButtons(true);
@@ -473,16 +520,16 @@ SHRIMPWARE.SISTest = (function() { // private module variables
               if (entry.id == _activeDevice.id) {
                   // create the buttons to call each available Spark.function
                   var functionButtons = "";
-                  for (var x in entry.functions) {
+                  for (x in entry.functions) {
                       var functionName = entry.functions[x];
                       logAdd("Function: " + functionName);
-                      functionButtons += formatCallButton(functionName)
+                      functionButtons += formatCallButton(functionName);
                       //console.log(functionButtons);
                   }
                   document.getElementById("functionButtons").innerHTML = functionButtons;
                   // create the buttons to retrieve each available Spark.variable
                   var variableButtons = '';
-                  for (var x in entry.variables) {
+                  for (x in entry.variables) {
                       var variableName = entry.variables[x];
                       logAdd("Variable: " + x + " type: " + variableName);
                       variableButtons += formatRetrieveButton(x);
@@ -525,13 +572,13 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             if (data.length > 5) {  // a short length indicates a heartbeat from the cloud
                 processPublishNotificationGroup(data);
             }
-        }
+        };
 
         // listen to only the selected device
         var accessToken = window.spark.accessToken;
-        eventMonitor.open("GET", "https://api.spark.io/v1/devices/"
-            + _activeDevice.id + "/events/SISEvent?access_token="
-            + accessToken , true);
+        eventMonitor.open("GET", "https://api.spark.io/v1/devices/" +
+            _activeDevice.id + "/events/SISEvent?access_token=" +
+            accessToken , true);
         eventMonitor.send();
         /*        if(typeof(EventSource) !== "undefined") {
           //var source = new EventSource("demo_sse.php");
@@ -562,7 +609,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                 heartbeat.style.background = "#ffffff";
                 heartbeat.setAttribute("data-state", "OFF");
             },500);
-        };
+        }
     },
     signalHeartbeatError = function() {
         // called by the Mainloop if too long goes by without any message from the cloud
@@ -598,10 +645,11 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // Now we have something to work with! This routine
         // process one event at a time. The events come from the
         // SIS calling spark.publish().
+      var sisEvent;
       try {
         //console.log(eventName);
         //console.log(eventData.data);
-        var sisEvent = JSON.parse(eventData.data);
+        sisEvent = JSON.parse(eventData.data);
       } catch (err) {
         logAdd(err);
         logAdd("Error parsing SIS event JSON");
@@ -686,7 +734,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         var errorMessages = "";
         // fix up resetAT epoc time.
         if (_sparkCoreData.hasOwnProperty("resetAt")) {
-          _sparkCoreData["resetAt"] = _sparkCoreData["resetAt"].replace("Z", "");
+          _sparkCoreData.resetAt = _sparkCoreData.resetAt.replace("Z", "");
         }
         for (var paramName in expectedConfigParams) {
           if (!expectedConfigParams.hasOwnProperty(paramName)) continue;
@@ -698,25 +746,25 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             switch (expectedParamType) {
               case "num":
                 if (isNaN(paramValue)) {
-                  errorMessages += "<br>Error: param " + paramName + ": "
-                            + paramValue + " must be a number";
+                  errorMessages += "<br>Error: param " + paramName + ": " +
+                            paramValue + " must be a number";
                 }
                 break;
               case "y/n":
                 if (paramValue != 'yes' && paramValue != 'no') {
-                  errorMessages += "<br>Error: param " + paramName + ": "
-                            + paramValue + " must be yes/no";
+                  errorMessages += "<br>Error: param " + paramName + ": " +
+                            paramValue + " must be yes/no";
                 }
                 break;
               case "epoc":
                 if (isNaN(paramValue)) {
-                  errorMessages += "<br>Error: param " + paramName + ": "
-                            + paramValue + " must be a number";
+                  errorMessages += "<br>Error: param " + paramName + ": " +
+                            paramValue + " must be a number";
                   break;
                 }
                 if (paramValue < 1420150996) {
-                  errorMessages += "<br>Warning: param " + paramName + ": "
-                            + paramValue + " seems too small for epoc time.";
+                  errorMessages += "<br>Warning: param " + paramName + ": " +
+                            paramValue + " seems too small for epoc time.";
                 }
                 break;
               default:
@@ -727,10 +775,10 @@ SHRIMPWARE.SISTest = (function() { // private module variables
           }
         } // end for
         if (_sparkCoreData.version != _expectedSISCoreVersion) {
-          errorMessages += "<br>Warning: Expected SIS firmware version: "
-                            + _expectedSISCoreVersion;
+          errorMessages += "<br>Warning: Expected SIS firmware version: " +
+                            _expectedSISCoreVersion;
         }
-        if (errorMessages != "") {
+        if (errorMessages !== "") {
             errorMessageAdd(errorMessages);
         }
       }
@@ -739,8 +787,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // A human readable summary of the spark core configuration
         document.getElementById("currentCoreConfig").innerHTML = "";
         var dateInSISTZ = new Date(Number(_sparkCoreData.resetAt) * 1000);
-        var dateInUTC = new Date((Number(_sparkCoreData.resetAt)
-                        - Number(_sparkCoreData.utcOffset) * 3600) * 1000);
+        var dateInUTC = new Date((Number(_sparkCoreData.resetAt) -
+                        Number(_sparkCoreData.utcOffset) * 3600) * 1000);
         var output = '';
         output += "<br>SIS firmware version: " + _sparkCoreData.version;
         output += "<br>Last Reset (SIS local time): " + dateInSISTZ.toLocaleString();
@@ -748,7 +796,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         output += "<br>Last Reset (UTC time)" + dateInUTC.toLocaleString();
         output += "<br>Core locale observes Daylight Savings Time? " + _sparkCoreData.DSTyn;
         output += "<br>Core retains last " + _sparkCoreData.cBufLen + " sensor events.";
-        output += "<br>"
+        output += "<br>";
         document.getElementById("currentCoreConfig").innerHTML += output;
     },
 
@@ -924,7 +972,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                         _sensorPositionBeingConfigured = sensorPosition;
                         _sensorDescriptionBeingConfigured = sensorDescription;
                         logAdd('Ready to configure sensor loc: ', sensorPosition);
-                    };
+                    }
                 });
             }
         });
@@ -981,9 +1029,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
 
                     if (data.indexOf("unknown") == -1) {
                         msgElement.innerHTML =
-                            "<br>Detected sensor is already configured."
-                            + " If this is the correct sensor, then remove it from the config first. Sensor id: "
-                            + 'xxx';
+                            "<br>Detected sensor is already configured." +
+                            " If this is the correct sensor, then remove it from the config first. Sensor id: " +
+                            'xxx';
 
                     } else {
                         // parse out the new sensor id
@@ -992,8 +1040,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                         var sensorId = data.substring(sensorIdStart,sensorIdEnd);
 
                         // have SIS add it into the configuration
-                        var commandParam = 'register,' + _sensorPositionBeingConfigured
-                            + ',' + sensorId + ',' + _sensorDescriptionBeingConfigured;
+                        var commandParam = 'register,' + _sensorPositionBeingConfigured +
+                            ',' + sensorId + ',' + _sensorDescriptionBeingConfigured;
 
                         callSparkCoreFunction("Register", commandParam, function(data) {
                             if (data != 4) {
@@ -1020,13 +1068,16 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     },
     clearSensorConfig = function() {
         // Call to have the SIS firmware wipe out its sensor config
+
+        function logSensorPositionCleared(i) {
+            logAdd("Sensor Config position cleared:" + i);
+        }
+
         for (var i=0; i<15; i++) {
             var commandParam = "register," + i + "," + i + ",unknown";
             logAdd(commandParam);
-            callSparkCoreFunction("Register",commandParam, function(i) {
-                logAdd("Sensor Config position cleared:" + i);
-            }
-        )}
+            callSparkCoreFunction("Register",commandParam, logSensorPositionCleared(i));
+        }
 
         var msgElement = document.getElementById('sensorConfigOutput').innerHTML =
             "<br>Sensor Config was cleared.";
@@ -1140,7 +1191,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
       _activeDevice.call(functionToCall, stringToSend, function(err, data) {
         var returnValue;
         if (err) {
-          logAdd("Error calling function: " + functionToCall + ": " + data)
+          logAdd("Error calling function: " + functionToCall + ": " + data);
           // is this right
           returnValue = "error";
         } else {
@@ -1188,6 +1239,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     styleTheAlert = function(mode) {
         // pass in mode 1,2,3  1:rtn to normal, 3:red
       return; // not using this now
+      /*
       var theAlert = document.getElementById("eventReceived");
       switch (mode) {
         case 1:
@@ -1199,7 +1251,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
           defaul:
             theAlert.visibility = 'hidden';
           break;
-      }
+      } */
     },
     formatCallButton = function(sparkFunctionName) {
       /*
@@ -1213,11 +1265,11 @@ SHRIMPWARE.SISTest = (function() { // private module variables
      */
       var sparkFunctionNameData = sparkFunctionName + 'Input';
       var sparkFunctionNameReturn = sparkFunctionName + 'Return';
-      var output = '<button onclick="SHRIMPWARE.SISTest.callSparkCoreFunctionFromHTMLButton('
-      + "'" + sparkFunctionName + "')" + '"' + "> Call " + sparkFunctionName
-      + '</button>' + "&nbsp;&nbsp;" + 'Input: <input type="text" id="'
-      + sparkFunctionNameData + '" size="25" >' + '<br>RtnCode: <input type="text" id="'
-      + sparkFunctionNameReturn + '" size="5" ><p>';
+      var output = '<button onclick="SHRIMPWARE.SISTest.callSparkCoreFunctionFromHTMLButton(' +
+        "'" + sparkFunctionName + "')" + '"' + "> Call " + sparkFunctionName +
+        '</button>' + "&nbsp;&nbsp;" + 'Input: <input type="text" id="' +
+        sparkFunctionNameData + '" size="25" >' + '<br>RtnCode: <input type="text" id="' +
+        sparkFunctionNameReturn + '" size="5" ><p>';
       //console.log(output);
       return output;
     },
@@ -1229,10 +1281,10 @@ SHRIMPWARE.SISTest = (function() { // private module variables
               <input id="Buffer_SizeReturn" type="text" size="45">
       */
       var sparkVariableNameReturn = sparkVariableName + "Return";
-      var output = '<button onclick="SHRIMPWARE.SISTest.getSparkCoreVariableFromHTMLButton('
-      + "'" + sparkVariableName + "'" + ')"> Retrieve ' + sparkVariableName
-      + '</button>' + "&nbsp;&nbsp;" + '<input type="text" id="'
-      + sparkVariableNameReturn + '" size="45" ><p>';
+      var output = '<button onclick="SHRIMPWARE.SISTest.getSparkCoreVariableFromHTMLButton(' +
+        "'" + sparkVariableName + "'" + ')"> Retrieve ' + sparkVariableName +
+        '</button>' + "&nbsp;&nbsp;" + '<input type="text" id="' +
+        sparkVariableNameReturn + '" size="45" ><p>';
       return output;
     },
     makeSensorEntrySelectForm = function() {
@@ -1242,7 +1294,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             msg += makeSensorEntrySelect(_mode.sensorList[i].pos,
                                          _mode.sensorList[i].label,
                                          _mode.sensorList[i].display);
-        };
+        }
         msg += '</form>';
 
         document.getElementById('sensorList').innerHTML = msg;
@@ -1252,8 +1304,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     },
     makeSensorEntrySelect = function(position, SISName, displayName) {
 
-        var msg = "<input type='radio' name='sensor' onClick='SHRIMPWARE.SISTest.showASensor("
-            + position + ', "' + SISName + '"' + ")'  >" + displayName + "<br>";
+        var msg = "<input type='radio' name='sensor' onClick='SHRIMPWARE.SISTest.showASensor(" +
+            position + ', "' + SISName + '"' + ")'  >" + displayName + "<br>";
         return msg;
 
     },
@@ -1273,9 +1325,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     analyzeSensorLog = function() {
       commandOutputClear();
       commandOutputAdd("This comes from the routine where I would add analysis.");
-      var msg = "Sensor log has " + _sparkCoreData.SensorLog.length + " entries in it."
+      var msg = "Sensor log has " + _sparkCoreData.SensorLog.length + " entries in it.";
       commandOutputAdd(msg);
-    }
+  };
   return {
       // public methods and properties
     loginToSpark: loginToSpark,
@@ -1296,6 +1348,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     debugShow: debugShow,
     startMonitoring: startMonitoring,
     saveSensorConfig:saveSensorConfig,
-    clearSensorConfig:clearSensorConfig
+    clearSensorConfig:clearSensorConfig,
+    deviceSelectChanged:deviceSelectChanged
   };
 }());
