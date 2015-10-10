@@ -1,0 +1,158 @@
+<div style="width: 3000px">
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-1346932-2']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+    <div id="top" style="width:2400px;">
+    </div>
+    <div id="left" style="width:2400px;">
+    </div>
+
+    <noscript>
+        This page requires that Javascript be enabled.
+    </noscript>
+
+    <div id="SISPageTitle" style="clear: both; width: 750px; height: auto; padding: 0px 0px 0px 50px;">
+        <h1 id="configTitle">&nbsp;</h1>
+        <div id="jbs_jsversion">
+        </div>
+    </div>
+
+    <div id="ColumnDiv" style="width:2000px; padding: 5px 5px 20px 50px; float: left;">
+
+
+
+        <div id="column1" style="float:left; width:400px">
+
+            <div id="spark-login" />
+            <script>
+                SHRIMPWARE.SISTest.loginToSpark(); // Displays the login button
+            </script>
+
+            <div style="clear:both; width:400px; margin:20px 0 20 0; height:100px">
+                <h3>Device List
+                    <button id="btnListAllDevices" onclick="SHRIMPWARE.SISTest.listAllDevices()">Refresh Device List</button>
+                </h3>
+                <div id="deviceListOutput">
+                    Log into Spark to see devices.
+                </div>
+            </div>
+
+            <div id='sensorSelectDiv' style="clear:both; width:400px; ">
+                <h3>Sensors to Configure</h3>
+                Select one to set up:
+                <div id="sensorList">
+
+                </div>
+            </div>
+        </div>
+
+        <div id="column2" style="float:left; width:500px;">
+            <div>
+                <h3> Selected Sensor Info </h3>
+            </div>
+            <div id="currentSensorDiv" style="width:500px">
+                <h4>Current Config Information</h4>
+                <div id="currentSensorInfo" style="padding: 0 0 0 20px;">
+
+                </div>
+
+            </div>
+
+            <div id="newSensorSetupDiv" style="width:500px">
+                <h4>Setup New Sensor</h4>
+                <div style="padding:0 0 0 20px">
+                    Optional: Clear Current SIS Config
+                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.clearSensorConfig()">Clear SIS Config</button>
+                    <br>
+                    <br> Optional: Review the sensor config
+                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
+                    <br>
+                    <br> Step 1: Click to begin.
+                    <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISTest.setNewSensorBegin()">Begin Setup</button>
+                    <br>
+                    <br> Step 2: Trip the new sensor, then click:
+                    <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISTest.setNewSensorWasTripped()" disabled='true'>New Sensor Was Tripped</button>
+                    <br>
+                    <br> Step 3: Click to save the new sensor set up.
+                    <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISTest.saveSensorConfig()">Save Sensor Setup</button>
+                    <br>
+                    <br>
+                </div>
+                <div id="sensorConfigOutput">
+
+                </div>
+
+            </div>
+
+            <div id="commandsDiv" style="clear:both; width:500px">
+                <h3>Commands</h3>
+                <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISTest.getSensorLog()">Get Sensor Log</button>
+                <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISTest.analyzeSensorLog()">Analyze Sensor Log</button>
+                <div id="commandOutput" style="margin-top:20px">
+                    Log into Spark to enable these buttons.
+                </div>
+            </div>
+
+        </div>
+
+        <div id="column3" style="float:left; width:400px">
+
+            <div style="float:left;">
+                <h3>Sensor Activity Realtime</h3>
+                <div style="padding:0 0 0 20px">
+                    <p id="eventHeartbeat" data-state="OFF" style="width:150px">Cloud heartbeat</p>
+                </div>
+                <div id="sensorActivityDiv" style="padding:0 0 0 20px">
+
+                </div>
+            </div>
+
+        </div>
+
+        <div id="column4" style="float:left; width:500px">
+            <button id="debugShowBtn" onClick="SHRIMPWARE.SISTest.debugShow()">Show Debug Log</button>
+
+            <div id="debugLogDiv" style="float:left; width:500px">
+                <h3>Debug Log
+                    <button onclick="SHRIMPWARE.SISTest.logClear()">Clear log</button>
+                </h3>
+                <div id="debugLog">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="errorMsgDiv" style="clear:both; padding:30px 0 0 0">
+        <h3>Error Messges...</h3>
+        <p>...if any, will display here, most recent on top
+            <div id="errorMessages">
+            </div>
+    </div>
+
+    <div id="downloadArea" style="clear:both; padding:30px 0 0 0">
+        <p>If you want all the code used on these pages, <a href="SISMon.zip">
+            click to download a zip</a> of it all. </p>
+    </div>
+
+    <div id="bottomdiv" style="clear:both; padding:30px 0 0 0">
+        <p>(c) 2014 Shrimpware LLC All Rights Reserved</p>
+    </div>
+
+    <script>
+        SHRIMPWARE.SISTest.initWebPage(); // called in case some web page elements need to be initialized
+    </script>
+
+</div>

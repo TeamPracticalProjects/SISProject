@@ -66,8 +66,9 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISTest = (function() { // private module variables
-  var _version = 16, // Now relies on Config string from the Spark Core (v15 or later)
+  var _version = 18, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
+                    // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
 
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
@@ -107,10 +108,13 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                  // provide to the user
         DoNothing : {},
         SIS : {value: 0, name: "SIS", sensorList: ""},
-        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", sensorList: ""}
+        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup", sensorList: ""},
+        ConfigSaratoga: {value: 2, name: "ConfigSaratoga", title: "SIS Saratoga Townhouse Setup",sensorList: ""},
+        ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",sensorList: ""},
+        ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",sensorList: ""}
     },
     _eType = {   // Sensor layout based on the eMode that has been set
-        Generic: [
+        SmallApartment: [
             {pos: 0, label: "FrontRoomPIR", display: "Front Room PIR"},
             {pos: 1, label: "BedRoomPIR",   display: "Bed Room PIR"},
             {pos: 2, label: "BathPIR",      display: "Bath Room PIR"},
@@ -137,6 +141,23 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 9, label: "TwoPeopleHome",  display: "Two People Home"},
             {pos: 10, label: "NoOneHome",  display: "No One Home"},
             {pos: 11, label: "AlertButton", display: "Alert Button"}
+        ],
+        BigHouse: [
+            {pos: 0, label: "FamilyRoom1PIR",  display: "Family Room 1 PIR"},
+            {pos: 1, label: "FamilyRoom2PIR",   display: "Family Room 2 PIR"},
+            {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
+            {pos: 3, label: "Bedroom1PIR",   display: "Bedroom 1 PIR"},
+            {pos: 4, label: "Bedroom2PIR",   display: "Bedroom 2 PIR"},
+            {pos: 5, label: "Bedroom3PIR",   display: "Bedroom 3 PIR"},
+            {pos: 6, label: "OfficePIR",   display: "Office PIR"},
+            {pos: 7, label: "DiningroomPIR",   display: "Dining Room PIR"},
+            {pos: 8, label: "Otherroom1PIR",   display: "Other Room 1 PIR"},
+            {pos: 9, label: "Otherroom2PIR",   display: "Other Room 2 PIR"},
+            {pos: 10, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 11, label: "PatioDoorSep",  display: "Patio Door Separation"},
+            {pos: 12, label: "BackDoorSep",  display: "Back Door Separation"},
+            {pos: 13, label: "OtherDoorSep",  display: "Other Door Separation"},
+            {pos: 14, label: "AlertButton", display: "Alert Button"}
         ]
     },
 
@@ -155,15 +176,19 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             break;
         case "ConfigSmallApartment":
             _mode = _eMode.ConfigSmallApartment;
-            _mode.sensorList = _eType.Generic;
+            _mode.sensorList = _eType.SmallApartment;
             break;
         case "ConfigSaratoga":
-            _mode = _eMode.ConfigSmallApartment;
+            _mode = _eMode.ConfigSaratoga;
             _mode.sensorList = _eType.Saratoga;
             break;
         case "ConfigElmStreet":
-            _mode = _eMode.ConfigSmallApartment;
+            _mode = _eMode.ConfigElmStreet;
             _mode.sensorList = _eType.ElmStreet;
+            break;
+        case "ConfigBigHouse":
+            _mode = _eMode.ConfigBigHouse;
+            _mode.sensorList = _eType.BigHouse;
             break;
         default:
             alert ('Your web page must call SHRIMPWARE.SIS.setMode with SIS or ConfigSmallApartment');
@@ -188,12 +213,16 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         document.getElementById("btnListAllDevices").disabled = true;
         disableDeviceButtons(true);
         _defaultBtnStyle = document.getElementById("btnGetSensorLog").style;
+        document.getElementById("configTitle").innerHTML = _mode.title;
         switch (_mode.name) {
         case "":
         case "SIS":
 
             break;
         case "ConfigSmallApartment":
+        case "ConfigElmStreet":
+        case "ConfigSaratoga":
+        case "ConfigBigHouse":
             document.getElementById("currentSensorDiv").style.display = "none";
             document.getElementById("newSensorSetupDiv").style.display = "none";
             document.getElementById("commandsDiv").style.display = "none";
@@ -217,6 +246,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             document.getElementById("btnGetSensorConfig").disabled = isDisabled;
             break;
         case "ConfigSmallApartment":
+        case "ConfigElmStreet":
+        case "ConfigSaratoga":
+        case "ConfigBigHouse":
             var ele = document.getElementsByName("sensor");
             for(var i=0;i<ele.length;i++) {
                 ele[i].checked = isDisabled;
