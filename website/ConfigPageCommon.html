@@ -1,4 +1,4 @@
-<div style="width: 3000px">
+<div style="width: 3000px; height:100%; margin:0; padding:0;">
     <script type="text/javascript">
         var _gaq = _gaq || [];
         _gaq.push(['_setAccount', 'UA-1346932-2']);
@@ -74,7 +74,7 @@
                 <h4>Setup New Sensor</h4>
                 <div style="padding:0 0 0 20px">
                     Optional: Clear Current SIS Config
-                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.clearSensorConfig()">Clear SIS Config</button>
+                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">Clear SIS Config</button>
                     <br>
                     <br> Optional: Review the sensor config
                     <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
@@ -155,4 +155,19 @@
         SHRIMPWARE.SISTest.initWebPage(); // called in case some web page elements need to be initialized
     </script>
 
+</div>
+
+<!-- the following div is used to make sure the user wants to clear their SIS sensor config -->
+<div id="modalClearSISConfigDiv" style="visibility:hidden; position:absolute; left:0px; top:0px; width:100%; height:100; text-align:center; z-index:1000">
+    <div style="width:400px; margin:100px auto; border:1px solid #000; padding:15px; text-align:center; background-color:#888;">
+        <h3>Are you sure?</h3>
+        You are about to clear your SIS sensor configuration. This will reset all of
+        the configured sensors back to nil. After this your SIS will not recognize any
+        sensor trips. You will need to configure each sensor again. This is not necessarily
+        bad, but you should be sure.
+        <p>
+        <input type="button" value="Clear SIS Configuration" onclick="SHRIMPWARE.SISTest.clearSensorConfig()">
+        &nbsp;&nbsp;&nbsp;
+        <input type="button" value="Cancel" onclick="SHRIMPWARE.SISTest.hideModalClearSISConfig()">
+    </div>
 </div>

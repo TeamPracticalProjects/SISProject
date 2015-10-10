@@ -1066,9 +1066,15 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         });
 
     },
+    hideModalClearSISConfig = function() {
+        document.getElementById("modalClearSISConfigDiv").style.visibility = "hidden";
+    },
+    showModalClearSISConfig = function() {
+        document.getElementById("modalClearSISConfigDiv").style.visibility = "visible";
+    },
     clearSensorConfig = function() {
         // Call to have the SIS firmware wipe out its sensor config
-
+        hideModalClearSISConfig();
         function logSensorPositionCleared(i) {
             logAdd("Sensor Config position cleared:" + i);
         }
@@ -1349,6 +1355,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     startMonitoring: startMonitoring,
     saveSensorConfig:saveSensorConfig,
     clearSensorConfig:clearSensorConfig,
-    deviceSelectChanged:deviceSelectChanged
+    deviceSelectChanged:deviceSelectChanged,
+    hideModalClearSISConfig:hideModalClearSISConfig,
+    showModalClearSISConfig:showModalClearSISConfig
   };
 }());
