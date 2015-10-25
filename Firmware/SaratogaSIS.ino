@@ -22,8 +22,9 @@ const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to 
+// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
 //  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
+// version 08j - added blinks in setup() to show progress.
 // version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
@@ -292,7 +293,7 @@ void setup()
 
   // Use D7 LED as a test indicator.  Light it for one second at setup time
   pinMode(D7, OUTPUT);
-  digitalWrite(D7, HIGH);
+
 
   // select virtual device on the eeprom
   if(VIRTUAL_DEVICE_NUM < MAX_VIRTUAL_DEVICES)
@@ -304,10 +305,22 @@ void setup()
     eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
 	// initialize the I2C comunication
   Wire.setSpeed(CLOCK_SPEED_100KHZ);
   Wire.stretchClock(false);
   Wire.begin();
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
 
   #ifdef DEBUG
 	 Serial.begin(9600);
@@ -319,8 +332,20 @@ void setup()
   attachInterrupt(INTERRUPT_315, isr315, CHANGE);   // 315 MHz receiver on interrupt 3 => that is pin #D3
   attachInterrupt(INTERRUPT_433, isr433, CHANGE);   // 433 MHz receiver on interrupt 4 => that is pin #D4
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
   // restore the saved configuration from non-volatile memory
   restoreConfig();
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
 
   // wait for the Core to synchronise time with the Internet
   while(Time.year() <= 1970 && millis() < 30000)
@@ -334,6 +359,11 @@ void setup()
     reportFatalError(3);
     //never returns from here
   }
+
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
 
 
   // Publish local configuration information in config[]
@@ -351,13 +381,18 @@ void setup()
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
 
+    digitalWrite(D7, HIGH);
+    delay(200);
+    digitalWrite(D7, LOW);
+    delay(200);
+
+
   // Initialize the lastTripTime[] array
   for (int i = 0; i < MAX_WIRELESS_SENSORS; i++)
   {
   	lastTripTime[i] = 0L;
   }
 
-  digitalWrite(D7, LOW);
 
 #ifdef DEBUG
   Serial.println("End of setup()");
@@ -1239,8 +1274,9 @@ int readFromBuffer(int offset, char stringPtr[])
 	{
     	int index;
 
-    	// parse the comma delimited string into its substrings
-        // result of parse is in global array g_dest[]
+       // parse the comma delimited string into its substrings
+      // result of parse is in global array g_dest[]
+
     	parser(g_bufferReadout);
 
     	// format the sequence number and place into g_bufferReadout
@@ -1756,12 +1792,16 @@ int sparkPublish (String eventName, String msg, int ttl)
     {
       String message = "Spark.publish failed";
       Serial.print(message);
-      message = "trying to publish " + eventName + ": " + msg;
+
+      message = " trying to publish " + eventName + ": " + msg;
+
       Serial.println(message);
       Spark.process();
     }
 
 #endif
+
+  return success;
 
   return success;
 
