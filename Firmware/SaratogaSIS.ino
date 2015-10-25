@@ -17,12 +17,13 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 08j.  8/9/15.  Spark Only.
+//  Version 08j.  10/13/15.  Spark Only.
 const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-
+// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
+//  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
 // version 08j - added blinks in setup() to show progress.
 // version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
@@ -135,13 +136,13 @@ const int INTERRUPT_433 = 4;   // the 433 MHz receiver is attached to interrupt 
 const int WINDOW = 200;    	// timing window (+/- microseconds) within which to accept a bit as a valid code
 const int TOLERANCE = 60;  	// % timing tolerance on HIGH or LOW values for codes
 const unsigned long ONE_DAY_IN_MILLIS = 86400000L;	// 24*60*60*1000
-const int MAX_WIRELESS_SENSORS = 15;
+const int MAX_WIRELESS_SENSORS = 20;
 const unsigned long FILTER_TIME = 5000L;  // Once a sensor trip has been detected, it requires 5 seconds before a new detection is valid
-const int BUF_LEN = 25;     	// circular buffer size.
-const int MAX_PIR = 4;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
-                            	//  BUF_LEN are non-PIR sensors
-const int MAX_DOOR = 6;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
-const int ALARM_SENSOR = 11;  // When this sensor is tripped, publish an SISAlarm
+const int BUF_LEN = 100;     	// circular buffer size.
+const int MAX_PIR = 9;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
+                            	//  MAX_WIRELESS_SENSORS are non-PIR sensors
+const int MAX_DOOR = 14;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
+const int ALARM_SENSOR = 15;  // When this sensor is tripped, publish an SISAlarm
 const int MAX_SUBSTRINGS = 6;   // the largest number of comma delimited substrings in a command string
 const byte NUM_BLINKS = 2;  	// number of times to blink the D7 LED when a sensor trip is received
 const unsigned long BLINK_TIME = 300L; // number of milliseconds to turn D7 LED on and off for a blink
@@ -198,6 +199,10 @@ String sensorName[] =      	{ "FrontRoom PIR",
                              	"UNREGISTERED S12",
                              	"UNREGISTERED S13",
                              	"UNREGISTERED S14",
+                             	"UNREGISTERED S15",
+                             	"UNREGISTERED S15",
+                             	"UNREGISTERED S15",
+                             	"UNREGISTERED S15",
                              	"UNREGISTERED S15"
                            	};
 
@@ -216,6 +221,11 @@ unsigned long activateCode[] = { 86101,   // sensor 0 (door/window) activation c
                              	0,      	// UNREGISTERED SENSOR
                              	0,      	// UNREGISTERED SENSOR
                              	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0,      	// UNREGISTERED SENSOR
+                             	0           // UNREGISTERED SENSOR
                            	};
 
 unsigned long lastTripTime[MAX_WIRELESS_SENSORS];	// array to hold the last time a sensor was tripped - for filtering purposes
