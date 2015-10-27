@@ -35,27 +35,35 @@
 
         <div id="column1" style="float:left; width:400px">
 
-            <div id="spark-login" />
+            <div id="spark-login" style="margin:50px 0px 0px 0px"/>
             <script>
                 SHRIMPWARE.SISTest.loginToSpark(); // Displays the login button
             </script>
 
-            <div style="clear:both; width:400px; margin:20px 0 20 0; height:100px">
+            <div style="clear:both; width:300px; margin:50px 0px 20px 0px; height:100px">
                 <h3>Device List
                     <button id="btnListAllDevices" onclick="SHRIMPWARE.SISTest.listAllDevices()">Refresh Device List</button>
                 </h3>
                 <div id="deviceListOutput">
-                    Log into Spark to see devices.
+                    <p style="color:red">Log into Spark to see devices and enable sensor configuration functions!</p>
                 </div>
             </div>
 
-            <div id='sensorSelectDiv' style="clear:both; width:400px; ">
+            <div id='sensorSelectDiv' style="clear:both; width:400px; height:100px ">
                 <h3>Sensors in this Configuration</h3>
                 Select one to set up:
-                <div id="sensorList">
-
+                <div id="sensorListDiv">
+                    Log in and select a device.
                 </div>
             </div>
+
+            <div id="errorMsgDiv" style="clear:both; padding:0px 0 0 0">
+                <h3>Error Messges...</h3>
+                <p>...if any, will display here, most recent on top
+                    <div id="errorMessages">
+                    </div>
+            </div>
+
         </div>
 
         <div id="column2" style="float:left; width:500px;">
@@ -109,7 +117,7 @@
 
         <div id="column3" style="float:left; width:400px">
 
-            <div style="float:left;">
+            <div style="float:left; height:500px">
                 <h3>Sensor Activity Realtime</h3>
                 <div style="padding:0 0 0 20px">
                     <p id="eventHeartbeat" data-state="OFF" style="width:150px">Cloud heartbeat</p>
@@ -135,12 +143,6 @@
         </div>
     </div>
 
-    <div id="errorMsgDiv" style="clear:both; padding:30px 0 0 0">
-        <h3>Error Messges...</h3>
-        <p>...if any, will display here, most recent on top
-            <div id="errorMessages">
-            </div>
-    </div>
 
     <div id="downloadArea" style="clear:both; padding:30px 0 0 0">
         <p>If you want all the code used on these pages, <a href="SISMon.zip">
