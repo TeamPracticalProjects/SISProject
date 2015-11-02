@@ -17,14 +17,13 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-//  Version 09.  10/30/15.  Spark Only.
+//  Version 09.  11/01/15.  Spark Only.
 const String VERSION = "S09";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-//  ***STILL NEED TO INVERT THE BLINKS ***
 // version 09 - inverted blinks during setup() to blink off vs blink on, so that it is easy
-//  see that setup() is complete.  Changes to 20 sensors with the following allocations:
+//  see that setup() is complete.  Changed to 20 sensors with the following allocations:
 //  loc 0 - 11:  PIR (interiod room)
 //  loc 12 - 15: exterior doors
 //  loc 16 - 18: misc sensors
@@ -296,11 +295,9 @@ boolean comatose = false;   // patient is not moving
 void setup()
 {
 
-
-
-  // Use D7 LED as a test indicator.  Light it for one second at setup time
+  // Use D7 LED as a test indicator.  Light it for the time spent in setup()
   pinMode(D7, OUTPUT);
-
+  digitalWrite(D7, HIGH);
 
   // select virtual device on the eeprom
   if(VIRTUAL_DEVICE_NUM < MAX_VIRTUAL_DEVICES)
@@ -312,9 +309,9 @@ void setup()
     eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 	// initialize the I2C comunication
@@ -322,11 +319,10 @@ void setup()
   Wire.stretchClock(false);
   Wire.begin();
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
     delay(200);
-
+    digitalWrite(D7, HIGH);
+    delay(200);
 
 
   #ifdef DEBUG
@@ -339,18 +335,17 @@ void setup()
   attachInterrupt(INTERRUPT_315, isr315, CHANGE);   // 315 MHz receiver on interrupt 3 => that is pin #D3
   attachInterrupt(INTERRUPT_433, isr433, CHANGE);   // 433 MHz receiver on interrupt 4 => that is pin #D4
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
     delay(200);
-
+    digitalWrite(D7, HIGH);
+    delay(200);
 
   // restore the saved configuration from non-volatile memory
   restoreConfig();
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -367,9 +362,9 @@ void setup()
     //never returns from here
   }
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -388,9 +383,9 @@ void setup()
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -404,6 +399,9 @@ void setup()
 #ifdef DEBUG
   Serial.println("End of setup()");
 #endif
+
+// turn off the D7 LED at the end of setup()
+digitalWrite(D7, LOW);
 
 }
 
