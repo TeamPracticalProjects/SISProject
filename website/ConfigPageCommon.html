@@ -57,6 +57,21 @@
                 </div>
             </div>
 
+            <div id="commandsDiv" style="clear:both; width:500px">
+                <h3>Commands</h3>
+                <br>Clear Current SIS Config
+                <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">Clear SIS Config</button>
+                <br>
+                <br>Review the current sensor config
+                <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
+                <br>
+                <br>Show the log of sensor events
+                <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISTest.getSensorLog()">Get Sensor Log</button>
+                <br>
+                <br>Not implemented yet
+                <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISTest.analyzeSensorLog()">Analyze Sensor Log</button>
+            </div>
+
             <div id="errorMsgDiv" style="clear:both; padding:0px 0 0 0">
                 <h3>Error Messges...</h3>
                 <p>...if any, will display here, most recent on top
@@ -66,11 +81,11 @@
 
         </div>
 
-        <div id="column2" style="float:left; width:500px;">
+        <div id="column2" style="float:left; width:500px; ">
             <div>
                 <h3> Selected Sensor Info </h3>
             </div>
-            <div id="currentSensorDiv" style="width:500px">
+            <div id="currentSensorDiv" style="width:500px; height:50px">
                 <h4>Current Config Information</h4>
                 <div id="currentSensorInfo" style="padding: 0 0 0 20px;">
 
@@ -78,7 +93,7 @@
 
             </div>
 
-            <div id="newSensorSetupDiv" style="width:500px">
+            <div id="newSensorSetupDiv" style="width:500px; height:150px">
                 <h4>Setup New Sensor</h4>
                 <div style="padding:0 0 0 20px">
                     Step 1: Click to begin.
@@ -91,27 +106,21 @@
                     <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISTest.saveSensorConfig()">Save Sensor Setup</button>
                     <br>
                     <br>
-                    <br>Optional: Clear Current SIS Config
-                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">Clear SIS Config</button>
-                    <br>
-                    <br> Optional: Review the sensor config
-                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Show Sensor Config</button>
 
-                </div>
-                <div id="sensorConfigOutput">
-
-                </div>
-
-            </div>
-
-            <div id="commandsDiv" style="clear:both; width:500px">
-                <h3>Commands</h3>
-                <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISTest.getSensorLog()">Get Sensor Log</button>
-                <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISTest.analyzeSensorLog()">Analyze Sensor Log</button>
-                <div id="commandOutput" style="margin-top:20px">
-                    Log into Spark to enable these buttons.
                 </div>
             </div>
+            <div style="width:500px; height:auto">
+                    <h3>Command Output</h3>
+                    <div id="sensorConfigOutput" style="width:500px; height:auto">
+                    </div>
+            </div>
+
+
+
+            <div id="commandOutput" style="margin-top:20px">
+                Log into Spark to enable these buttons.
+            </div>
+
 
         </div>
 

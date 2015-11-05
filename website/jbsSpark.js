@@ -66,7 +66,7 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISTest = (function() { // private module variables
-  var _version = 19, // Now relies on Config string from the Spark Core (v15 or later)
+  var _version = 20, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
                     // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
                     // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
@@ -74,6 +74,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                     //     moved creation of device select form to a subroutine for readability
                     //     made sensor pick list a drop down, always visible, but disabled until a device
                     //         is selected.
+                    // v20 moved a number of elements around.
+                    //     made buttons visible at all times and only enabled when the can be used.
 
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
@@ -118,14 +120,14 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",sensorList: ""},
         ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",sensorList: ""}
     },
-    // SIS Firmware expects PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
+    // SIS Firmware expects PIRs in 0-11, Exterior Doors in 12-15, Generic in 16-18, Alarm/Panic in 19.
     _eType = {   // Sensor layout based on the eMode that has been set
         SmallApartment: [
             {pos: 0, label: "FrontRoomPIR", display: "Front Room PIR"},
             {pos: 1, label: "BedRoomPIR",   display: "Bed Room PIR"},
             {pos: 2, label: "BathPIR",      display: "Bath Room PIR"},
             {pos: 3, label: "HallwayPIR",   display: "Hallway PIR"},
-            {pos: 10, label: "FrontDoorSep", display: "Front Door Separation"}
+            {pos: 12, label: "FrontDoorSep", display: "Front Door Separation"}
         ],
         Saratoga: [
             {pos: 0, label: "FrontRoomPIR",  display: "Front Room PIR"},
@@ -133,19 +135,19 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 2, label: "SecondBedPIR",  display: "Second Bed Room PIR"},
             {pos: 3, label: "KitchenPIR",    display: "Kitchen PIR"},
             {pos: 4, label: "UpperHallPIR",  display: "Upper Hall PIR"},
-            {pos: 10, label: "FrontDoorSep",  display: "Front Door Separation"},
-            {pos: 11, label: "GarageDoorSep", display: "Garage Door Separation"}
+            {pos: 12, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 13, label: "GarageDoorSep", display: "Garage Door Separation"}
         ],
         ElmStreet: [
             {pos: 0, label: "FrontRoomPIR",  display: "Front Room PIR"},
             {pos: 1, label: "JimsRoomPIR",   display: "Jim's Office PIR"},
             {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
             {pos: 3, label: "MasterBRPIR",   display: "MasterBR PIR"},
-            {pos: 10, label: "FrontDoorSep",  display: "Front Door Separation"},
-            {pos: 11, label: "BackDoorSep",  display: "Back Door Separation"},
-            {pos: 15, label: "OnePersonHome",  display: "One Person Home"},
-            {pos: 16, label: "TwoPeopleHome",  display: "Two People Home"},
-            {pos: 17, label: "NoOneHome",  display: "No One Home"},
+            {pos: 12, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 13, label: "BackDoorSep",  display: "Back Door Separation"},
+            {pos: 16, label: "OnePersonHome",  display: "One Person Home"},
+            {pos: 17, label: "TwoPeopleHome",  display: "Two People Home"},
+            {pos: 18, label: "NoOneHome",  display: "No One Home"},
             {pos: 19, label: "AlertButton", display: "Alert Button"}
         ],
         BigHouse: [
@@ -157,12 +159,14 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 5, label: "Bedroom3PIR",   display: "Bedroom 3 PIR"},
             {pos: 6, label: "OfficePIR",   display: "Office PIR"},
             {pos: 7, label: "DiningroomPIR",   display: "Dining Room PIR"},
-            {pos: 8, label: "Otherroom1PIR",   display: "Other Room 1 PIR"},
-            {pos: 9, label: "Otherroom2PIR",   display: "Other Room 2 PIR"},
-            {pos: 10, label: "FrontDoorSep",  display: "Front Door Separation"},
-            {pos: 11, label: "PatioDoorSep",  display: "Patio Door Separation"},
-            {pos: 12, label: "BackDoorSep",  display: "Back Door Separation"},
-            {pos: 13, label: "OtherDoorSep",  display: "Other Door Separation"},
+            {pos: 8, label: "Bathroom1PIR",   display: "Bathroom 1 PIR"},
+            {pos: 9, label: "Bathroom2PIR",   display: "Bathroom 2 PIR"},
+            {pos: 10, label: "Otherroom1PIR",   display: "Other Room 1 PIR"},
+            {pos: 11, label: "Otherroom2PIR",   display: "Other Room 2 PIR"},
+            {pos: 12, label: "FrontDoorSep",  display: "Front Door Separation"},
+            {pos: 13, label: "PatioDoorSep",  display: "Patio Door Separation"},
+            {pos: 14, label: "BackDoorSep",  display: "Back Door Separation"},
+            {pos: 15, label: "OtherDoorSep",  display: "Other Door Separation"},
             {pos: 19, label: "AlertButton", display: "Alert Button"}
         ]
     },
@@ -229,22 +233,24 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         case "ConfigElmStreet":
         case "ConfigSaratoga":
         case "ConfigBigHouse":
-            document.getElementById("currentSensorDiv").style.display = "none";
-            document.getElementById("newSensorSetupDiv").style.display = "none";
-            document.getElementById("commandsDiv").style.display = "none";
+            //document.getElementById("currentSensorDiv").style.display = "none";
+            //document.getElementById("newSensorSetupDiv").style.display = "none";
+            //document.getElementById("commandsDiv").style.display = "none";
             document.getElementById("sensorActivityDiv").style.display = "none";
             document.getElementById("debugLogDiv").style.display = "none";
             makeSensorEntrySelectForm(_mode.sensorList);
             makeSensorLiveDisplay();
+
             break;
         }
         disableDeviceButtons(true); // do this after the page elements are all set up in the DOM
+        disableSensorButtons(true);
 
         _mainLoop = setInterval(mainLoopTimerPop,500);
         //_startDate = new Date();
     },
 
-    // Call this to disable the buttons that would talk to the SIS
+    // Call this to disable the buttons that should only be shown when a device is selected
     disableDeviceButtons = function(isDisabled) {
         // God, I hate negative logical variable names!
         switch(_mode.name) {
@@ -267,12 +273,37 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             document.getElementById("sensorListDiv").style.display = "block";
             document.getElementById("sensorSelect").disabled = isDisabled;
             document.getElementById("sensorActivityDiv").style.display = visibilityState;
-
-
+            document.getElementById("btnClearSISConfig").disabled = isDisabled;
+            document.getElementById("btnGetSensorConfig").disabled = isDisabled;
             break;
         }
         document.getElementById("btnGetSensorLog").disabled = isDisabled;
         document.getElementById("btnAnalyzeSensorLog").disabled = isDisabled;
+    },
+
+    // Call this to disable the buttons that should only be shown when a sensor is selected
+    disableSensorButtons = function(isDisabled) {
+        // God, I hate negative logical variable names!
+        switch(_mode.name) {
+        case "":
+        case "SIS":
+            break;
+        case "ConfigSmallApartment":
+        case "ConfigElmStreet":
+        case "ConfigSaratoga":
+        case "ConfigBigHouse":
+            var ele = document.getElementsByName("sensor");
+            for(var i=0;i<ele.length;i++) {
+                ele[i].checked = isDisabled;
+                //ele[i].disabled = isEnabled;
+            }
+            var visibilityState = "block";
+            if (isDisabled) visibilityState = "none";
+            document.getElementById("btnSetNewSensorBegin").disabled = isDisabled;
+            document.getElementById("btnSetNewSensorWasTripped").disabled = isDisabled;
+            document.getElementById("btnSaveSensorConfig").disabled = isDisabled;
+            break;
+        }
     },
 
     // The web page has the ability to show a debug log of calls to the cloud.
@@ -426,6 +457,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         var modePosition = selectList.options[selectList.selectedIndex].value;
         var selectedSensor = _mode.sensorList[modePosition];
         showASensor(selectedSensor.pos,selectedSensor.name);
+        resetSensorRegButtons();
 
     },
 
@@ -946,7 +978,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // that is to be configured by the user.
         document.getElementById("currentSensorDiv").style.display = "block";
         document.getElementById("newSensorSetupDiv").style.display = "block";
-        document.getElementById("commandsDiv").style.display = "block";
+        //document.getElementById("commandsDiv").style.display = "block";
         resetSensorRegButtons();
 
         document.getElementById("currentSensorInfo").innerHTML =
