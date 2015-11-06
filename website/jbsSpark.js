@@ -167,6 +167,9 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             {pos: 13, label: "PatioDoorSep",  display: "Patio Door Separation"},
             {pos: 14, label: "BackDoorSep",  display: "Back Door Separation"},
             {pos: 15, label: "OtherDoorSep",  display: "Other Door Separation"},
+            {pos: 16, label: "GenericSensor1",  display: "Generic Sensor 1"},
+            {pos: 17, label: "GenericSensor2",  display: "Generic Sensor 2"},
+            {pos: 18, label: "GenericSensor3",  display: "Generic Sensor 3"},
             {pos: 19, label: "AlertButton", display: "Alert Button"}
         ]
     },
