@@ -35,25 +35,26 @@
         This page requires that Javascript be enabled.
     </noscript>
 
-	<div style="clear: both; width: 750px; height: auto">
-		<h1>SIS Test Page</h1>
+    <div id="SISPageTitle" style="clear: both; width: 750px; height: auto; padding: 0px 0px 0px 50px;">
+        <h1 id="configTitle">&nbsp;</h1>
         <div id="jbs_jsversion">
         </div>
-	</div>
+    </div>
+
 
 
 	<div name="leftcolumn" style="float:left; width:400px">
 
 		<div id="spark-login" class="auto-style2" />
  			<script>
- 				SHRIMPWARE.SISTest.loginToSpark(); // Displays the login button
+ 				SHRIMPWARE.SISClient.loginToSpark(); // Displays the login button
 			</script>
 		</div>
 
 
 		<div style="clear:both; margin:20px 0 20 0; height:100px">
 			<h3>Device List
-                <button id="btnListAllDevices" onclick="SHRIMPWARE.SISTest.listAllDevices()">Refresh Device List</button>
+                <button id="btnListAllDevices" onclick="SHRIMPWARE.SISClient.listAllDevices()">Refresh Device List</button>
             </h3>
             <div id="deviceListOutput">
 				Log into Spark to see devices.
@@ -65,7 +66,7 @@
             <h3>Attributes</h3>
             <div id="btnGetAttributes"></div>
             <!--
-                <button id="btnGetAttributes" onclick="SHRIMPWARE.SISTest.getAttributes()">Refresh Attributes</button>
+                <button id="btnGetAttributes" onclick="SHRIMPWARE.SISClient.getAttributes()">Refresh Attributes</button>
             Refresh button does not work! See jbsSpark.js to debug this.
             -->
             <div id="functionButtons">
@@ -89,8 +90,8 @@
 
         <div style="clear:both; width:500px">
             <h3>Sensor Config</h3>
-            <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">Get Sensor Config</button>
-            <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.clearSensorConfig()">Clear Current SIS Config</button><br>
+            <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">Get Sensor Config</button>
+            <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISClient.clearSensorConfig()">Clear Current SIS Config</button><br>
         <div id="sensorConfigOutput">
                 Log into Spark to see your sensor config
         </div>
@@ -99,8 +100,8 @@
 
         <div style="clear:both; width:500px">
             <h3>Commands</h3>
-            <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISTest.getSensorLog()">Get Sensor Log</button>
-            <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISTest.analyzeSensorLog()">Analyze Sensor Log</button>
+            <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISClient.getSensorLog()">Get Sensor Log</button>
+            <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISClient.analyzeSensorLog()">Analyze Sensor Log</button>
             <div id="commandOutput" style="margin-top:20px" >
                 Log into Spark to enable these buttons.
             </div>
@@ -111,7 +112,7 @@
     <div name="rightcolumn" style="float:left; width=500px">
 
         <div style="float:right; width:500px">
-            <h3>Debug Log <button onclick="SHRIMPWARE.SISTest.logClear()">Clear log</button></h3>
+            <h3>Debug Log <button onclick="SHRIMPWARE.SISClient.logClear()">Clear log</button></h3>
             <div id="debugLog" >
             </div>
         </div>
@@ -134,7 +135,7 @@
 	</div>
 
 	<script>
-    SHRIMPWARE.SISTest.initWebPage(); // called in case some web page elements need to be initialized
+    SHRIMPWARE.SISClient.initWebPage(); // called in case some web page elements need to be initialized
 	</script>
 
 </div>

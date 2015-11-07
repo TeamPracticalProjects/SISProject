@@ -77,7 +77,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                     // v20 moved a number of elements around.
                     //     made buttons visible at all times and only enabled when the can be used.
                     // v21 more layout changes
-                    // v22 changed module from SISTest to SISClient
+                    // v22 changed module from SISClient to SISClient
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
@@ -118,7 +118,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     _eMode = { // the web page sets this so that we know what options to
                  // provide to the user
         DoNothing : {},
-        SIS : {value: 0, name: "SIS",
+        SIS : {value: 0, name: "SIS", title: "SIS Debug Page",
             sensorList: "", showConfig:true},
         ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup",
             sensorList: "", showConfig:true },
