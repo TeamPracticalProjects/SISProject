@@ -19,7 +19,7 @@
     </noscript>
 
     <div id="SISPageTitle" >
-        <h1 id="configTitle">&nbsp;</h1>
+        <h2 id="configTitle">&nbsp;</h2>
         <div id="jbs_jsversion">
         </div>
     </div>
@@ -81,7 +81,7 @@
 
         <div id="column2" class="columnSet">
             <div id='sensorSelectDiv'>
-                <h3>Sensors in this Configuration</h3>
+                <h3>Sensors</h3>
                 <div  class="innerDiv">
                     Select one to set up:
                     <div id="sensorListDiv">
@@ -97,28 +97,23 @@
             <div id="currentSensorDiv" class="outerDivNoHeight">
                 <h4>Current Config Information</h4>
                 <div id="currentSensorInfo" class="innerDiv">
-
+                    (Will display once you select a sensor.)
                 </div>
 
             </div>
 
-            <div id="newSensorSetupDiv">
+            <div id="newSensorSetupDiv" class="outerDivNoHeight">
                 <h4>Setup New Sensor</h4>
                     <div  class="innerDiv">
                         Step 1: Click to begin.
                         <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">
                             Begin Setup</button>
-                        <br>
                         <br> Step 2: Trip the new sensor:
                         <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISClient.setNewSensorWasTripped()" disabled='true'>
                             New Sensor Was Tripped</button>
-                        <br>
                         <br> Step 3: Save the new sensor set up.
                         <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">
                             Save Sensor Setup</button>
-                        <br>
-                        <br>
-
                     </div>
                 </div>
             </div>
@@ -135,9 +130,9 @@
         <div id="column3"  class="columnSet">
 
             <div >
-                <h3>Sensor Activity Realtime</h3>
+                <h3>Reality Activity</h3>
                 <div  class="innerDiv">
-                    <p id="eventHeartbeat" data-state="OFF" >Cloud heartbeat</p>
+                    <p id="eventHeartbeat" data-state="OFF" >Cloud Connected</p>
                 </div>
                 <div id="sensorActivityDiv"  class="innerDiv">
 

@@ -1,33 +1,56 @@
 #pageContainer {
     /*width:3000px;*/
-    padding: 0px 0px 0px 50px;
+    padding: 0px 0px 0px 5%;
 }
-.columnSet {
+#column1 {
     float:left;
-    width:25%;
+    width:28%;
+    min-width: 400px;
+    min-height: 400px;
 }
+#column2 {
+    float:left;
+    width:28%;
+    min-width: 400px;
+    min-height: 400px;
+}
+#column3 {
+    float:left;
+    width:15%;
+    min-width: 200px;
+    min-height: 400px;
+}
+#column4 {
+    float:left;
+    width:28%;
+    min-width: 300px;
+    min-height: 50px;
+}
+
 #spark-login {
     margin:10px 0px 0px 0px;
 }
 .outerDivNoHeight {
     clear:both;
     margin:20px 0px 0px 0px;
+    height: auto;
 }
 .innerDiv {
     padding:0 0 0 10px;
 }
 #configReportDiv {
-    height:180px;
+    min-height:150px;
 }
- #currentSensorDiv {
-     height:50px;
- }
- #newSensorSetupDiv {
-      height:150px;
- }
 #bottomDiv {
      clear:both;
      padding:30px 0 0 0;
+}
+#debugLog {
+    padding-left: 5%;
+    text-indent: -5%;
+}
+#debugLog > p {
+    margin:0% 0% 0% 0%;
 }
 #modalClearSISConfigDiv {
     visibility:hidden;

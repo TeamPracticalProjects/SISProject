@@ -77,7 +77,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                     // v20 moved a number of elements around.
                     //     made buttons visible at all times and only enabled when the can be used.
                     // v21 more layout changes
-                    // v22 changed module from SISClient to SISClient
+                    // v22 changed module from SISClient to SISClient.
+                    //     made debug output use <p> instead of <br>
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
@@ -331,7 +332,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       currentTime = currentTime.valueOf();
       var logElement = document.getElementById("debugLog");
       var currentLog = logElement.innerHTML;
-      currentLog = currentTime + " " + message + "<br>" + currentLog;
+      currentLog = currentTime + " " + message + "<p>" + currentLog;
       logElement.innerHTML = currentLog;
     },
     logClear = function() {
