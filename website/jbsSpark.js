@@ -465,6 +465,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
     },
     sensorSelectChanged = function() {
+        sensorSelectedDisplay();
+    },
+    sensorSelectedDisplay = function() {
         // position, label, display
         var selectList =document.getElementById('sensorSelect');
         if (selectList.selectedIndex === 0)
@@ -1020,8 +1023,13 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         //document.getElementById("commandsDiv").style.display = "block";
         resetSensorRegButtons();
 
-        document.getElementById("currentSensorInfo").innerHTML =
-                        "Getting current config, please wait.";
+        var theElement = document.getElementById("currentSensorInfo");
+        theElement.innerHTML = "Getting current config, please wait.";
+        //force a redraw
+        theElement.style.display = "none";
+        theElement.innerHTML = theElement.innerHTML;
+        theElement.style.display = "block";
+
         var commandParam = "read, " + sensorPosition;
         callSparkCoreFunction("Register", commandParam, function(data) {
             if (data < 0) {
@@ -1117,19 +1125,14 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                                 // Now command SIS to save its config automatically?
                                 // TODO
                                 msgElement.innerHTML = '<br>Sensor was successfully registered!';
-
+                                sensorSelectedDisplay();
                             }
-
-
                         });
-
                     }
-
                 }
             }
             resetSensorRegButtons();
         });
-
     },
 
     hideModalClearSISConfig = function() {
