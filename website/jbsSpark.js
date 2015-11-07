@@ -1159,6 +1159,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         var msgElement = document.getElementById('commandOutput').innerHTML =
             "<br>Sensor Config was cleared.";
 
+        makeSensorEntrySelectForm(_mode.sensorList);
+        document.getElementById("currentSensorInfo").innerHTML = "Select a sensor.";
+
     },
 
     saveSensorConfig = function() {
