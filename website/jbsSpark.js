@@ -66,7 +66,7 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISTest = (function() { // private module variables
-  var _version = 20, // Now relies on Config string from the Spark Core (v15 or later)
+  var _version = 21, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
                     // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
                     // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
@@ -76,6 +76,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                     //         is selected.
                     // v20 moved a number of elements around.
                     //     made buttons visible at all times and only enabled when the can be used.
+                    // v21 more layout changes
 
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
@@ -88,7 +89,10 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             SensorLogIsRefreshed: false,
             SensorConfig: [],
             SensorConfigIsRefreshed: false,
-            LastSensorTrip: ''
+            LastSensorTrip: '',
+            SISConfigIsRefeshed: false
+            // search code for validateCoreConfig to see what other properties
+            // can be part of this object. God Damn, I hate loosly typed languages.
         },
     _lastHeartbeat, // time that we last got a message from the spark cloud.
                                  // used to determine if we have lost the connection
@@ -114,11 +118,16 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     _eMode = { // the web page sets this so that we know what options to
                  // provide to the user
         DoNothing : {},
-        SIS : {value: 0, name: "SIS", sensorList: ""},
-        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup", sensorList: ""},
-        ConfigSaratoga: {value: 2, name: "ConfigSaratoga", title: "SIS Saratoga Townhouse Setup",sensorList: ""},
-        ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",sensorList: ""},
-        ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",sensorList: ""}
+        SIS : {value: 0, name: "SIS",
+            sensorList: "", showConfig:true},
+        ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup",
+            sensorList: "", showConfig:true },
+        ConfigSaratoga: {value: 2, name: "ConfigSaratoga", title: "SIS Saratoga Townhouse Setup",
+            sensorList: "", showConfig:true},
+        ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",
+            sensorList: "", showConfig:true},
+        ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",
+            sensorList: "", showConfig:true}
     },
     // SIS Firmware expects PIRs in 0-11, Exterior Doors in 12-15, Generic in 16-18, Alarm/Panic in 19.
     _eType = {   // Sensor layout based on the eMode that has been set
@@ -250,6 +259,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         disableSensorButtons(true);
 
         _mainLoop = setInterval(mainLoopTimerPop,500);
+        clearLocalSparkConfig();
         //_startDate = new Date();
     },
 
@@ -357,13 +367,13 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     // this routine is called to add the SIS sensor config to the web page.
     sensorConfigOutputAdd = function(message) {
         // adds message to top of the div debugLog with a timestamp
-        var logElement = document.getElementById("sensorConfigOutput");
+        var logElement = document.getElementById("commandOutput");
         var currentLog = logElement.innerHTML;
         currentLog = message + "<br>" + currentLog;
         logElement.innerHTML = currentLog;
     },
     sensorConfigOutputClear = function() {
-        document.getElementById("sensorConfigOutput").innerHTML = "";
+        document.getElementById("commandOutput").innerHTML = "";
     },
 
     // ------------------------------------------------------------------------
@@ -446,6 +456,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
       document.getElementById("btnListAllDevices").disabled = false;
     },
     deviceSelectChanged = function() {
+        clearLocalSparkConfig();
         var selectList = document.getElementById("deviceSelect");
         if (selectList.selectedIndex === 0)
             return null;
@@ -728,7 +739,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     // The results are then shown in the div id="currentCoreConfig"
     //
     getCoreConfiguration = function(junk) {
-      getSparkCoreVariable("Config", storeCoreConfiguration);
+        _sparkCoreData.SISConfigIsRefeshed = false;
+        getSparkCoreVariable("Config", storeCoreConfiguration);
     },
     storeCoreConfiguration = function(data) {
       // store the core configuration
@@ -739,7 +751,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         _sparkCoreData[paramParsed[0].trim()] = paramParsed[1].trim();
       }
       validateCoreConfig();
-      if (_mode == _eMode.SIS) {
+      if (_mode.showConfig) {
           displaySparkConfig();
       }
       return;
@@ -799,6 +811,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
               // this switch statement.
                 errorMessages += "<br>Error: 1 Javascript problem in validateCoreConfig.";
             }
+            _sparkCoreData.SISConfigIsRefeshed = true;
           }
         } // end for
         if (_sparkCoreData.version != _expectedSISCoreVersion) {
@@ -810,22 +823,33 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         }
       }
     },
+
+    clearLocalSparkConfig = function() {
+        document.getElementById("currentCoreConfig").innerHTML = '';
+        _sparkCoreData.SISConfigIsRefeshed = false;
+    },
+
     displaySparkConfig = function() {
         // A human readable summary of the spark core configuration
-        document.getElementById("currentCoreConfig").innerHTML = "";
-        var dateInSISTZ = new Date(Number(_sparkCoreData.resetAt) * 1000);
-        var dateInUTC = new Date((Number(_sparkCoreData.resetAt) -
+        var outputDiv = document.getElementById("currentCoreConfig");
+        var output='';
+        if (!_sparkCoreData.SISConfigIsRefeshed) {
+            output = 'No config data. Is a device selected?';
+        } else {
+            var dateInSISTZ = new Date(Number(_sparkCoreData.resetAt) * 1000);
+            var dateInUTC = new Date((Number(_sparkCoreData.resetAt) -
                         Number(_sparkCoreData.utcOffset) * 3600) * 1000);
-        var output = '';
-        output += "<br>SIS firmware version: " + _sparkCoreData.version;
-        output += "<br>Last Reset (SIS local time): " + dateInSISTZ.toLocaleString();
-        output += "  (" + _sparkCoreData.utcOffset + ")";
-        output += "<br>Last Reset (UTC time)" + dateInUTC.toLocaleString();
-        output += "<br>Core locale observes Daylight Savings Time? " + _sparkCoreData.DSTyn;
-        output += "<br>Core retains last " + _sparkCoreData.cBufLen + " sensor events.";
-        output += "<br>";
-        document.getElementById("currentCoreConfig").innerHTML += output;
+            output += "SIS firmware version: " + _sparkCoreData.version;
+            output += "<br>Last Reset (SIS local time):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " + dateInSISTZ.toLocaleString();
+            output += "  (" + _sparkCoreData.utcOffset + ")";
+            output += "<br>Last Reset (UTC time):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + dateInUTC.toLocaleString();
+            output += "<br>SIS locale observes Daylight Savings Time?<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " + _sparkCoreData.DSTyn;
+            output += "<br>Core retains last " + _sparkCoreData.cBufLen + " sensor events.";
+            output += "<br>";
+        }
+        outputDiv.innerHTML += output;
     },
+
 
     // ------------------------------------------------------------------------
     // -------- Get current SIS Sensor log -----------------------
@@ -848,6 +872,11 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // Retrieve the sensor log at buffPosition, then when done call this
         // again with buffPosition-1. Stop when buffPosition is < 0.
         // Start by calling this with the length of the sensor log.
+      if (!_sparkCoreData.SISConfigIsRefeshed) {
+          console.log('_sparkCoreData is not current in iterateSensorLog');
+          return;
+      }
+
       buffPosition = buffPosition + 1;
       if (buffPosition > _sparkCoreData.cBufLen) {
         logAdd("buffPosition is now greater than bufferLength");
@@ -887,6 +916,12 @@ SHRIMPWARE.SISTest = (function() { // private module variables
 
     massageSensorLog = function(sensorLogData) {
     // turn the sensor log record into the displayable output
+
+        if (!_sparkCoreData.SISConfigIsRefeshed) {
+            message = '';
+            console.log('_sparkCoreData was null in massageSensorLog');
+            return 'error';
+        }
 
         var message = "";
         // find the epoc date
@@ -1010,7 +1045,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // sure the next time we read it it will be the new sensor. This is
         // needed to prevent confusion when configuring sensors.
 
-        document.getElementById('sensorConfigOutput').innerHTML = '';
+        document.getElementById('commandOutput').innerHTML = '';
         getSparkCoreVariable("sensorTrip", function(data) {
 
             //if (!data) {
@@ -1038,7 +1073,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         // Then stuff it in the SIS slot we are configuring.
         // Have SIS save config.
 
-        var msgElement = document.getElementById('sensorConfigOutput');
+        var msgElement = document.getElementById('commandOutput');
         // read the sensor trip
         getSparkCoreVariable("sensorTrip", function(data) {
 
@@ -1117,7 +1152,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
             callSparkCoreFunction("Register",commandParam, logSensorPositionCleared(i));
         }
 
-        var msgElement = document.getElementById('sensorConfigOutput').innerHTML =
+        var msgElement = document.getElementById('commandOutput').innerHTML =
             "<br>Sensor Config was cleared.";
 
     },
@@ -1125,12 +1160,12 @@ SHRIMPWARE.SISTest = (function() { // private module variables
     saveSensorConfig = function() {
         // call to have the SIS firmware store its sensor config in
         // non volatile memory
-        var msgElement = document.getElementById('sensorConfigOutput');
+        var msgElement = document.getElementById('commandOutput');
         var commandParam = "store,1,1,1";
         callSparkCoreFunction("Register", commandParam, function(data) {
             if (data != 4) {
                 // some error
-                document.getElementById('sensorConfigOutput').innerHTML =
+                document.getElementById('commandOutput').innerHTML =
                     "Error from SIS Register: " + data;
             } else {
                 msgElement.innerHTML = '<br>Sensor setup was successfully saved.';
@@ -1337,10 +1372,8 @@ SHRIMPWARE.SISTest = (function() { // private module variables
         devlist.forEach(function(entry) {
           var connectedValue = "";
           if (entry.connected) {
-            _sparkCoreData.connectedValue = true;
             coreState = "ONLINE";
           } else {
-            _sparkCoreData.connectedValue = false;
             coreState = "Offline";
           }
           output += '<option value="' + entry.id + '">' + entry.name + ' ' + coreState + '</option>';
