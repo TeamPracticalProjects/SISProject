@@ -17,7 +17,7 @@
   and then start dealing with JS errors for missing divs and buttons. Every time
   the JS complains of a missing element, just add a DIV with that ID. Eventually
   add this
-    <script> SHRIMPWARE.SISTest.setMode("ConfigElmStreet"); </script>
+    <script> SHRIMPWARE.SISClient.setMode("ConfigElmStreet"); </script>
   and that will give you new divs to add to your web page.
 
   External Calls to Spark.io:
@@ -65,8 +65,8 @@ firmware we have written to run in the spark core.
 if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
-SHRIMPWARE.SISTest = (function() { // private module variables
-  var _version = 21, // Now relies on Config string from the Spark Core (v15 or later)
+SHRIMPWARE.SISClient = (function() { // private module variables
+  var _version = 22, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
                     // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
                     // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
@@ -77,7 +77,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
                     // v20 moved a number of elements around.
                     //     made buttons visible at all times and only enabled when the can be used.
                     // v21 more layout changes
-
+                    // v22 changed module from SISTest to SISClient
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
@@ -1339,7 +1339,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
      */
       var sparkFunctionNameData = sparkFunctionName + 'Input';
       var sparkFunctionNameReturn = sparkFunctionName + 'Return';
-      var output = '<button onclick="SHRIMPWARE.SISTest.callSparkCoreFunctionFromHTMLButton(' +
+      var output = '<button onclick="SHRIMPWARE.SISClient.callSparkCoreFunctionFromHTMLButton(' +
         "'" + sparkFunctionName + "')" + '"' + "> Call " + sparkFunctionName +
         '</button>' + "&nbsp;&nbsp;" + 'Input: <input type="text" id="' +
         sparkFunctionNameData + '" size="25" >' + '<br>RtnCode: <input type="text" id="' +
@@ -1356,7 +1356,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
               <input id="Buffer_SizeReturn" type="text" size="45">
       */
       var sparkVariableNameReturn = sparkVariableName + "Return";
-      var output = '<button onclick="SHRIMPWARE.SISTest.getSparkCoreVariableFromHTMLButton(' +
+      var output = '<button onclick="SHRIMPWARE.SISClient.getSparkCoreVariableFromHTMLButton(' +
         "'" + sparkVariableName + "'" + ')"> Retrieve ' + sparkVariableName +
         '</button>' + "&nbsp;&nbsp;" + '<input type="text" id="' +
         sparkVariableNameReturn + '" size="45" ><p>';
@@ -1404,7 +1404,7 @@ SHRIMPWARE.SISTest = (function() { // private module variables
 
     makeSensorEntrySelect = function(position, SISName, displayName) {
 
-        var msg = "<input type='radio' name='sensor' onClick='SHRIMPWARE.SISTest.showASensor(" +
+        var msg = "<input type='radio' name='sensor' onClick='SHRIMPWARE.SISClient.showASensor(" +
             position + ', "' + SISName + '"' + ")'  >" + displayName + "<br>";
         return msg;
 

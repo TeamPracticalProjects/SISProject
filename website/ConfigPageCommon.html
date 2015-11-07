@@ -37,34 +37,36 @@
 
             <div id="spark-login" style="margin:30px 0px 0px 0px"/>
             <script>
-                SHRIMPWARE.SISTest.loginToSpark(); // Displays the login button
+                SHRIMPWARE.SISClient.loginToSpark(); // Displays the login button
             </script>
 
             <div style="clear:both; margin:40px 0px 0px 0px; ">
                 <h3>Device List
-                    <button id="btnListAllDevices" onclick="SHRIMPWARE.SISTest.listAllDevices()">Refresh Device List</button>
+                    <button id="btnListAllDevices" onclick="SHRIMPWARE.SISClient.listAllDevices()">
+                        Refresh Device List</button>
                 </h3>
                 <div id="deviceListOutput">
-                    <p style="color:red">Log into Spark to see devices and enable <br>sensor configuration functions!</p>
+                    <p style="color:red">Log into Spark to see devices and enable
+                        <br>sensor configuration functions!</p>
                 </div>
             </div>
             <div id="commandsDiv" style="clear:both; margin:20px 0px 0px 0px;  ">
                 <h3>Commands</h3>
                 <div style="padding:0 0 0 10px">
                     Show the current sensor config
-                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISTest.getSensorConfig()">
+                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
                         Show</button>
 
                     <br>Show the log of sensor events
-                    <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISTest.getSensorLog()">
+                    <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISClient.getSensorLog()">
                         Show</button>
 
                     <br>Clear Current SIS Config
-                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISTest.showModalClearSISConfig()">
+                    <button id="btnClearSISConfig" onclick="SHRIMPWARE.SISClient.showModalClearSISConfig()">
                         Clear</button>
 
                     <br>Not implemented yet
-                    <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISTest.analyzeSensorLog()">
+                    <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISClient.analyzeSensorLog()">
                         Analyze Sensor Log</button>
                 </div>
             </div>
@@ -111,13 +113,13 @@
                 <h4>Setup New Sensor</h4>
                     <div style="padding:0 0 0 20px">
                         Step 1: Click to begin.
-                        <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISTest.setNewSensorBegin()">Begin Setup</button>
+                        <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">Begin Setup</button>
                         <br>
                         <br> Step 2: Trip the new sensor:
-                        <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISTest.setNewSensorWasTripped()" disabled='true'>New Sensor Was Tripped</button>
+                        <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISClient.setNewSensorWasTripped()" disabled='true'>New Sensor Was Tripped</button>
                         <br>
                         <br> Step 3: Save the new sensor set up.
-                        <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISTest.saveSensorConfig()">Save Sensor Setup</button>
+                        <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">Save Sensor Setup</button>
                         <br>
                         <br>
 
@@ -149,11 +151,11 @@
         </div>
 
         <div id="column4" style="float:left; width:500px">
-            <button id="debugShowBtn" onClick="SHRIMPWARE.SISTest.debugShow()">Show Debug Log</button>
+            <button id="debugShowBtn" onClick="SHRIMPWARE.SISClient.debugShow()">Show Debug Log</button>
 
             <div id="debugLogDiv" style="float:left; width:500px">
                 <h3>Debug Log
-                    <button onclick="SHRIMPWARE.SISTest.logClear()">Clear log</button>
+                    <button onclick="SHRIMPWARE.SISClient.logClear()">Clear log</button>
                 </h3>
                 <div id="debugLog">
                 </div>
@@ -173,7 +175,7 @@
     </div>
 
     <script>
-        SHRIMPWARE.SISTest.initWebPage(); // called in case some web page elements need to be initialized
+        SHRIMPWARE.SISClient.initWebPage(); // called in case some web page elements need to be initialized
     </script>
 
 </div>
@@ -187,8 +189,8 @@
         sensor trips. You will need to configure each sensor again. This is not necessarily
         bad, but you should be sure.
         <p>
-        <input type="button" value="Clear SIS Configuration" onclick="SHRIMPWARE.SISTest.clearSensorConfig()">
+        <input type="button" value="Clear SIS Configuration" onclick="SHRIMPWARE.SISClient.clearSensorConfig()">
         &nbsp;&nbsp;&nbsp;
-        <input type="button" value="Cancel" onclick="SHRIMPWARE.SISTest.hideModalClearSISConfig()">
+        <input type="button" value="Cancel" onclick="SHRIMPWARE.SISClient.hideModalClearSISConfig()">
     </div>
 </div>
