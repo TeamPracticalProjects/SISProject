@@ -52,6 +52,9 @@
 #debugLog > p {
     margin:0% 0% 0% 0%;
 }
+#sensorActivityDiv > p {
+    margin:0% 0% 0% 0%;
+}
 #modalClearSISConfigDiv {
     visibility:hidden;
     position:absolute;
