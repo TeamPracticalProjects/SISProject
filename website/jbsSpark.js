@@ -100,7 +100,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     _lastHeartbeat, // time that we last got a message from the spark cloud.
                                  // used to determine if we have lost the connection
     _attributes, // the attributes of our selected core, returned from the spark cloud
-                              //how does this work when there is more than one core?
 
     _lastHandledPublishedEventNum = 0,
     // the last event number that has been handled
@@ -314,7 +313,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             var ele = document.getElementsByName("sensor");
             for(var i=0;i<ele.length;i++) {
                 ele[i].checked = isDisabled;
-                //ele[i].disabled = isEnabled;
             }
             var visibilityState = "block";
             if (isDisabled) visibilityState = "none";
@@ -488,8 +486,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       logAdd("get attributes succeeded");
       console.log("attributes: ", data);
       _attributes = data;
-      // XXX testing device selection from form
-      // activeDeviceSet(); // set the device we will be using
     },
     attributesPrFalse = function(err) {
       logAdd("get attributes failed");
@@ -590,19 +586,21 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // call only when _activeDevice is defined (after selectActiveDevice)
         logAdd("entered startMonitoring");
         var eventMonitor = new XMLHttpRequest();
+
         eventMonitor.onreadystatechange = function() {
 
             signalHeartbeat(); // we got something from the cloud, so the connection
                                // is still open and running
 
             if (eventMonitor.readyState == 4) {
-
                 errorMessageAdd("Event monitor stream has closed.");
+                // xxx here we should try to restart the monitoring again.
             }
 
             var data = eventMonitor.responseText;
             console.log(data);
             if (data.length > 5) {  // a short length indicates a heartbeat from the cloud
+                // go handle the notification from the SIS
                 processPublishNotificationGroup(data);
             }
         };
@@ -631,17 +629,25 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // id="eventHeartbeat" to let the user know things are still alive.
         _lastHeartbeat = new Date();
 
-        if (_mode.name == "ConfigSmallApartment") {
-            var heartbeat = document.getElementById("eventHeartbeat");
-            var hbState = heartbeat.getAttribute("data-state");
-            if (hbState == "OFF") {
-                heartbeat.style.background = "#00ff00";
-                heartbeat.setAttribute("data-state", "ON");
-            }
-            setTimeout(function() {  // used to turn the green off
-                heartbeat.style.background = "#ffffff";
-                heartbeat.setAttribute("data-state", "OFF");
-            },500);
+        switch (_mode.name) {
+            case "ConfigSmallApartment":
+            case "ConfigElmStreet":
+            case "ConfigSaratoga":
+            case "ConfigBigHouse":
+                var heartbeat = document.getElementById("eventHeartbeat");
+                var hbState = heartbeat.getAttribute("data-state");
+                if (hbState == "OFF") {
+                    heartbeat.style.background = "#00ff00";
+                    heartbeat.setAttribute("data-state", "ON");
+                }
+                setTimeout(function() {  // used to turn the green off
+                    heartbeat.style.background = "#ffffff";
+                    heartbeat.setAttribute("data-state", "OFF");
+                },500);
+                break;
+            default:
+                // ignore the heartbeat
+                break;
         }
     },
     signalHeartbeatError = function() {
@@ -699,6 +705,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                 alertSISEventReceived();
                 break;
             case 'ConfigSmallApartment':
+            case "ConfigElmStreet":
+            case "ConfigSaratoga":
+            case "ConfigBigHouse":
 /* xxx ANIMATION TO BE REDONE */
                 var sensorLocation = Number(sisEvent.sensorLocation);
                 sensorTripStartAnimation(sensorLocation);
@@ -1427,7 +1436,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             var theSensor = _mode.sensorList[i];
             content += '<tr id="sensorTableRow' + theSensor.pos + '">';
         //    content += '<td>' + theSensor.pos + '</td>';
-            content += '<td>' + theSensor.display + '</td>';
+            content += '<td name= "' + theSensor.pos + '" class="showSensorActive">' + theSensor.display + '</td>';
             content += '<td id="sensorTableCellR' + theSensor.pos + 'Code" class="sensorTableCodeCells">' + '--' + '</td>';
             content += '<td class="sensorTableResetCells">' + '<button class="sensorTableActionButton" onclick="SHRIMPWARE.SISClient.sensorTableResetClick(' + theSensor.pos +')">reset</button>' + '</td>';
             content += '<td class="sensorTableAddCells">' + '<button class="sensorTableActionButton" onclick="SHRIMPWARE.SISClient.sensorTableAddClick(' + theSensor.pos +')">add</button>' + '</td>';
