@@ -440,8 +440,10 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // query spark.io for an updated list of devices
       logAdd("In listAllDevices");
       document.getElementById("btnListAllDevices").disabled = true;
+      disableDeviceButtons(true);
       unselectDevice();
       commandOutputClear();
+      sensorTableClearSensorCodes();
       var devicesPr = spark.listDevices();
       // NEW TO JS: The next line will execute the spark.listDevices()
       //   method and then call either one of the other of the two routines
@@ -1125,8 +1127,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                                 msgElement.innerHTML =
                                     "<br>Error from SIS Register: " + data;
                             } else {
-                                // Now command SIS to save its config automatically?
-                                // TODO
+                                saveSensorConfig();
                                 msgElement.innerHTML = '<br>Sensor was successfully registered!';
                                 sisReadASensorConfig(_sensorPositionBeingConfigured, function(sisConfigItem){
                                     sensorTableUpdateSensorCode(sisConfigItem);
@@ -1168,6 +1169,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         function logSensorPositionCleared() {
             logAdd("Sensor Config position cleared" + sensorPosition);
             sisReadASensorConfig(sensorPosition);
+            saveSensorConfig();
         }
 
         var commandParam = "register," + sensorPosition + ",0,unknown";
@@ -1472,6 +1474,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
     sensorTableResetClick = function (sisPosition) {
         clearASingleSensorConfig(sisPosition);
+
     },
 
     //---------------  Sensor Table End ----------------------
