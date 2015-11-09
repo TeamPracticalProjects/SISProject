@@ -248,12 +248,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         case "ConfigElmStreet":
         case "ConfigSaratoga":
         case "ConfigBigHouse":
-            //document.getElementById("currentSensorDiv").style.display = "none";
-            //document.getElementById("newSensorSetupDiv").style.display = "none";
-            //document.getElementById("commandsDiv").style.display = "none";
-            document.getElementById("sensorActivityDiv").style.display = "none";
+
             document.getElementById("debugLogDiv").style.display = "none";
-            makeSensorLiveDisplay();
 
             break;
         }
@@ -287,9 +283,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                 //ele[i].disabled = isEnabled;
             }
             var visibilityState = "block";
-            if (isDisabled) visibilityState = "none";
-            document.getElementById("sensorListDiv").style.display = "block";
-            document.getElementById("sensorActivityDiv").style.display = visibilityState;
+            if (isDisabled) {
+                visibilityState = "none";
+            }
             document.getElementById("btnClearSISConfig").disabled = isDisabled;
             document.getElementById("btnGetSensorConfig").disabled = isDisabled;
 
@@ -661,7 +657,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       // we sort them out and handle them one event at a time.
       var eventRows = data.split("\n");
       for (var i = 0; i < eventRows.length; i++) {
-        console.log("testing row" + i + "  " + eventRows[i]);
         if (eventRows[i].substring(0, 4) == "data") {
           var eventName = eventRows[i - 1];
           eventName = eventName.substring(7, eventName.length);
@@ -704,6 +699,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                 alertSISEventReceived();
                 break;
             case 'ConfigSmallApartment':
+/* xxx ANIMATION TO BE REDONE */
                 var sensorLocation = Number(sisEvent.sensorLocation);
                 sensorTripStartAnimation(sensorLocation);
                 break;
@@ -1157,8 +1153,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
         sensorTableClearSensorCodes();
 
-        document.getElementById("currentSensorInfo").innerHTML = "Select a sensor.";
-
     },
     clearASingleSensorConfig = function (sensorPosition) {
 
@@ -1194,6 +1188,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     // ---------- End of Configure a new sensor in the SIS  ----------------------------
 
     // ------- Show the user that a sensor was tripped
+/* xxx ANIMATION NEEDS TO BE DONE AGAIN */
     sensorTripStartAnimation = function(sensorLocation) {
         // call this to decorate a sensor text on the screen
         // The animation will slowly degrade the color.
@@ -1398,7 +1393,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         outputElement.innerHTML = output;
         document.getElementById("deviceSelect").onchange = deviceSelectChanged;
     },
-
+/*
     makeSensorLiveDisplay = function() {
         var msg = '';
         for (var i in _mode.sensorList) {
@@ -1410,13 +1405,13 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         }
         document.getElementById('sensorActivityDiv').innerHTML = msg;
     },
-
+*/
     // -------------- Sensor Table ------------------
     // This is the code for the main table which displays sensors and
     // allows for them to be changed.
     makeSensorTable = function () {
         //create the main sensor control table
-        var theOutput = document.getElementById('testColumn');
+        var theOutput = document.getElementById('sensorTableDiv');
         var content = '';
 
         //table header
@@ -1485,6 +1480,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     listAllDevices: listAllDevices,
     getSensorLog: getSensorLog,
     getSensorConfig: getSensorConfig,
+    clearSensorConfig: clearSensorConfig,
     analyzeSensorLog: analyzeSensorLog,
     logClear: logClear,
     callSparkCoreFunctionFromHTMLButton: callSparkCoreFunctionFromHTMLButton,
@@ -1493,7 +1489,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     setNewSensorWasTripped: setNewSensorWasTripped,
     debugShow: debugShow,
     saveSensorConfig:saveSensorConfig,
-    clearSensorConfig:clearSensorConfig,
     deviceSelectChanged:deviceSelectChanged,
     hideModalClearSISConfig:hideModalClearSISConfig,
     showModalClearSISConfig:showModalClearSISConfig,

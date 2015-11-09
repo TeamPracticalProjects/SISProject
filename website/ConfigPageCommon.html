@@ -29,6 +29,7 @@
         <div id="column1" class="columnSet">
 
             <div id="spark-login" />
+
             <script>
                 SHRIMPWARE.SISClient.loginToSpark(); // Displays the login button
             </script>
@@ -43,6 +44,7 @@
                         <br>sensor configuration functions!</p>
                 </div>
             </div>
+
             <div id="commandsDiv" class="outerDivNoHeight">
                 <h3>Commands</h3>
                 <div id="commandsInnerDiv" class="innerDiv">
@@ -59,6 +61,7 @@
                         Analyze Sensor Log</button>
                 </div>
             </div>
+
             <div id="configReportDiv" class="outerDivNoHeight" >
                 <h3>Config Report from Selected Device</h3>
                 <div id="currentCoreConfig" class="innerDiv">
@@ -73,86 +76,42 @@
                     </div>
             </div>
 
-        </div>
+        </div>  <!-- end of column 1 -->
 
 
-                <div id="column3">
-                    Show the current sensor config
-                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
-                        Refresh</button>
-                        <div id="testColumn" style="width:400px">
+        <div id="column2">
 
-                        </div>
-                </div>
-
-        <div id="column2" class="columnSet">
-            <div id='sensorSelectDiv'>
-                <h3>Sensors</h3>
-                <div  class="innerDiv">
-                    Select one to set up:
-                    <div id="sensorListDiv">
-                        Log in and select a device.
-                    </div>
-                </div>
+            Show the current sensor config
+            <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
+                Refresh</button>
+            <div id="sensorTableDiv" style="width:400px">
             </div>
 
+        </div> <!-- end of column 2 -->
 
-            <div id="selectedSensorDiv" class="outerDivNoHeight">
-                <h3> Selected Sensor Info </h3>
 
-            <div id="currentSensorDiv" class="outerDivNoHeight">
-                <h4>Current Config Information</h4>
-                <div id="currentSensorInfo" class="innerDiv">
-                    (Will display once you select a sensor.)
-                </div>
+        <div id="column3" class="columnSet">
 
-            </div>
-<!--
-            <div id="newSensorSetupDiv" class="outerDivNoHeight">
-                <h4>Setup New Sensor</h4>
-                    <div  class="innerDiv">
-                        Step 1: Click to begin.
-                        <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">
-                            Begin Setup</button>
-                        <br> Step 2: Trip the new sensor:
-                        <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISClient.setNewSensorWasTripped()" disabled='true'>
-                            New Sensor Was Tripped</button>
-                        <br> Step 3: Save the new sensor set up.
-                        <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">
-                            Save Sensor Setup</button>
-                    </div>
-
-                </div>
-
-                                -->
-            </div>
             <div id="commandOutputOuterDiv" class="outerDivNoHeight">
-                    <h3>Command Output</h3>
-                    <div id="commandOutput"  class="innerDiv" >
-                        Results of a command will display here.
-                    </div>
+                <h3>Command Output</h3>
+                <div id="commandOutput"  class="innerDiv" >
+                    Results of a command will display here.
+                </div>
             </div>
-
-        </div>
-
-
-        <div id="XXcolumn3"  class="columnSet">
 
             <div >
                 <h3>Realtime Activity</h3>
                 <div  class="innerDiv">
                     <p id="eventHeartbeat" data-state="OFF" >Cloud Connected</p>
                 </div>
-                <div id="sensorActivityDiv"  class="innerDiv">
 
-                </div>
             </div>
 
-        </div>
+        </div> <!-- end of column 3 -->
 
         <div id="column4"  class="columnSet">
-            <button id="debugShowBtn" onClick="SHRIMPWARE.SISClient.debugShow()">Show Debug Log</button>
 
+            <button id="debugShowBtn" onClick="SHRIMPWARE.SISClient.debugShow()">Show Debug Log</button>
             <div id="debugLogDiv">
                 <h3>Debug Log
                     <button onclick="SHRIMPWARE.SISClient.logClear()">Clear log</button>
@@ -161,9 +120,7 @@
                 </div>
             </div>
 
-        </div>
-
-
+        </div> <!-- end of column 4 -->
 
     </div>
 
@@ -180,8 +137,8 @@
 </div>
 
 <!-- the following div is used to make sure the user wants to clear their SIS sensor config -->
-<div id="modalClearSISConfigDiv" >
-    <div id="modalClearSISConfigInnerDiv" >
+<div id="modalClearSISConfigDiv" class="modalOuterDiv" >
+    <div id="modalClearSISConfigInnerDiv" class = "modalInnerDiv">
         <h3>Are you sure?</h3>
         You are about to clear your SIS sensor configuration. This will reset all of
         the configured sensors back to nil. After this your SIS will not recognize any
@@ -194,8 +151,8 @@
     </div>
 </div>
 <!-- the following div is used when the user wants to add a new sensor to their SIS config -->
-<div id="modalnewSensorSetupDiv" class="outerDivNoHeight">
-    <div id="modalnewSensorSetupInnerDiv" >
+<div id="modalnewSensorSetupDiv" class="modalOuterDiv" >
+    <div id="modalnewSensorSetupInnerDiv"  class = "modalInnerDiv">
         <h4>Setup New Sensor</h4>
         <div  class="innerDiv">
             Step 1: Click to begin.
