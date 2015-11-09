@@ -80,6 +80,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                     // v22 changed module from SISClient to SISClient.
                     //     made debug output use <p> instead of <br>
                     // v23 complete change to the new sensor table format.
+                    //     removed sensor select drop down
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
@@ -252,13 +253,12 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             //document.getElementById("commandsDiv").style.display = "none";
             document.getElementById("sensorActivityDiv").style.display = "none";
             document.getElementById("debugLogDiv").style.display = "none";
-            makeSensorEntrySelectForm(_mode.sensorList);
             makeSensorLiveDisplay();
 
             break;
         }
         makeSensorTable();
-        
+
         disableDeviceButtons(true); // do this after the page elements are all set up in the DOM
         disableSensorButtons(true);
 
@@ -289,7 +289,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             var visibilityState = "block";
             if (isDisabled) visibilityState = "none";
             document.getElementById("sensorListDiv").style.display = "block";
-            document.getElementById("sensorSelect").disabled = isDisabled;
             document.getElementById("sensorActivityDiv").style.display = visibilityState;
             document.getElementById("btnClearSISConfig").disabled = isDisabled;
             document.getElementById("btnGetSensorConfig").disabled = isDisabled;
@@ -472,20 +471,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         if (selectList.selectedIndex === 0)
             return null;
         activeDeviceSet(selectList.options[selectList.selectedIndex].value);
-
-    },
-    sensorSelectChanged = function() {
-        sensorSelectedDisplay();
-    },
-    sensorSelectedDisplay = function() {
-        // position, label, display
-        var selectList =document.getElementById('sensorSelect');
-        if (selectList.selectedIndex === 0)
-            return null;
-        var modePosition = selectList.options[selectList.selectedIndex].value;
-        var selectedSensor = _mode.sensorList[modePosition];
-        showASensor(selectedSensor.pos,selectedSensor.name);
-        resetSensorRegButtons();
 
     },
 
@@ -1162,7 +1147,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                                 // Now command SIS to save its config automatically?
                                 // TODO
                                 msgElement.innerHTML = '<br>Sensor was successfully registered!';
-                                sensorSelectedDisplay();
                                 sisReadASensorConfig(_sensorPositionBeingConfigured, function(sisConfigItem){
                                     sensorTableUpdateSensorCode(sisConfigItem);
                                 });
@@ -1195,7 +1179,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         var msgElement = document.getElementById('commandOutput').innerHTML =
             "<br>Sensor Config was cleared.";
 
-        makeSensorEntrySelectForm(_mode.sensorList);
         sensorTableClearSensorCodes();
 
         document.getElementById("currentSensorInfo").innerHTML = "Select a sensor.";
@@ -1440,33 +1423,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         document.getElementById("deviceSelect").onchange = deviceSelectChanged;
     },
 
-    makeSensorEntrySelectForm = function(sensorList) {
-
-        var outputElement = document.getElementById("sensorListDiv");
-        //display all the devices on the web page
-        var output = '<form><select id="sensorSelect">';
-        output += '<option disabled selected >-- pick a sensor to configure --</option>';
-        for (var i =0 ; i<sensorList.length; i++) {
-            output += '<option value="' + i + '">' + sensorList[i].label + ' ' + sensorList[i].display + '</option>';
-        }
-        output += '</select></form>';
-        outputElement.innerHTML = output;
-
-        document.getElementById('sensorListDiv').innerHTML = output;
-        console.log(output);
-
-        document.getElementById("sensorSelect").onchange = sensorSelectChanged;
-
-    },
-
-    makeSensorEntrySelect = function(position, SISName, displayName) {
-
-        var msg = "<input type='radio' name='sensor' onClick='SHRIMPWARE.SISClient.showASensor(" +
-            position + ', "' + SISName + '"' + ")'  >" + displayName + "<br>";
-        return msg;
-
-    },
-
     makeSensorLiveDisplay = function() {
         var msg = '';
         for (var i in _mode.sensorList) {
@@ -1551,26 +1507,25 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     loginToSpark: loginToSpark,
     initWebPage: initWebPage,
     listAllDevices: listAllDevices,
-    getAttributes: getAttributes,
+    //getAttributes: getAttributes,
     getSensorLog: getSensorLog,
     getSensorConfig: getSensorConfig,
     analyzeSensorLog: analyzeSensorLog,
-    activeDeviceSet: activeDeviceSet,
+    //activeDeviceSet: activeDeviceSet,
     logClear: logClear,
     callSparkCoreFunctionFromHTMLButton: callSparkCoreFunctionFromHTMLButton,
     getSparkCoreVariableFromHTMLButton: getSparkCoreVariableFromHTMLButton,
     setMode: setMode,
-    showASensor: showASensor,
+    //showASensor: showASensor,
 //    setNewSensorBegin: setNewSensorBegin,
     setNewSensorWasTripped: setNewSensorWasTripped,
     debugShow: debugShow,
-    startMonitoring: startMonitoring,
+    //startMonitoring: startMonitoring,
     saveSensorConfig:saveSensorConfig,
     clearSensorConfig:clearSensorConfig,
     deviceSelectChanged:deviceSelectChanged,
     hideModalClearSISConfig:hideModalClearSISConfig,
     showModalClearSISConfig:showModalClearSISConfig,
-    sensorSelectChanged:sensorSelectChanged,
     sensorTableAddClick:sensorTableAddClick,
     sensorTableResetClick:sensorTableResetClick
   };
