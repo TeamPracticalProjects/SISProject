@@ -1038,38 +1038,14 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     // These functions are called from the web page in order to guide the user
     // through configuring a new sensor in the SIS firmware. The user starts by
     // selecting a radio button for the sensor they want to configure (it might
-    // have a name like "front room"). When they click a radio button then
-    // showASensor is called to set up the process.
-    // setNewSensorBegin is called from a GUI button.
+    // have a name like "front room"). When they click an Add button then
+    // modalsetNewSensorBegin is called to set up the process.
+    // modalsetNewSensorBegin is called from a GUI button.
     // setNewSensorWasTripped is called from a GUI once the user has
     //    triggered the new sensor. The sensor is registered in the SIS.
     // Utility functions are also here to clear the entire SIS sensor config and
     // to tell the SIS to save the current sensor config to non volatile storage.
     //
-    showASensor = function(sensorPosition, sensorDescription) {
-        // pass in SIS config position and text description for the sensor
-        // that is to be configured by the user.
-
-        resetSensorRegButtons();
-
-        var theElement = document.getElementById("currentSensorInfo");
-        theElement.innerHTML = "Getting current config, please wait.";
-        //force a redraw
-        theElement.style.display = "none";
-        theElement.innerHTML = theElement.innerHTML;
-        theElement.style.display = "block";
-
-        sisReadASensorConfig(sensorPosition, function(sisConfigItem) {
-            var msg = "Pos: " + sisConfigItem.position + " Code: " + sisConfigItem.sensorCode;
-            document.getElementById("currentSensorInfo").innerHTML = msg;
-            _sensorPositionBeingConfigured = sisConfigItem.position;
-            _sensorDescriptionBeingConfigured = "unspec'd";
-            logAdd('Ready to configure sensor loc: ', sisConfigItem.position);
-            // xxx shouldn't we update the _sparkCoreData.SensorConfig array here?
-            sensorTableUpdateSensorCode(sisConfigItem);
-        });
-
-    },
 
     modalsetNewSensorBegin = function(){
         //read the last sensor trip and put it in a global variable to make
@@ -1516,11 +1492,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     callSparkCoreFunctionFromHTMLButton: callSparkCoreFunctionFromHTMLButton,
     getSparkCoreVariableFromHTMLButton: getSparkCoreVariableFromHTMLButton,
     setMode: setMode,
-    //showASensor: showASensor,
-//    setNewSensorBegin: setNewSensorBegin,
     setNewSensorWasTripped: setNewSensorWasTripped,
     debugShow: debugShow,
-    //startMonitoring: startMonitoring,
     saveSensorConfig:saveSensorConfig,
     clearSensorConfig:clearSensorConfig,
     deviceSelectChanged:deviceSelectChanged,
