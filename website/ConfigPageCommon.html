@@ -195,7 +195,8 @@
 </div>
 <!-- the following div is used when the user wants to add a new sensor to their SIS config -->
 <div id="modalnewSensorSetupDiv" class="outerDivNoHeight">
-    <h4>Setup New Sensor</h4>
+    <div id="modalnewSensorSetupInnerDiv" >
+        <h4>Setup New Sensor</h4>
         <div  class="innerDiv">
             Step 1: Click to begin.
             <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">
@@ -208,4 +209,6 @@
                 Save Sensor Setup</button>
         </div>
     </div>
+</div>
+
 </div>

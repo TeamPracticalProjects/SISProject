@@ -100,10 +100,6 @@
 .sensorTableAddCells {
     text-align: center;
 }
-.sensorTableActionButton {
-    disable:true;
-}
-
 #modalClearSISConfigDiv {
     visibility:hidden;
     position:absolute;
@@ -132,7 +128,7 @@
     text-align:center;
     z-index:1000;
 }
-#modalnewSensorSetupDiv {
+#modalnewSensorSetupInnerDiv {
     width:400px;
     margin:100px auto;
     border:1px solid #000;
