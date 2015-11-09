@@ -46,11 +46,7 @@
             <div id="commandsDiv" class="outerDivNoHeight">
                 <h3>Commands</h3>
                 <div id="commandsInnerDiv" class="innerDiv">
-                    Show the current sensor config
-                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
-                        Show</button>
-
-                    <br>Show the log of sensor events
+                    Show the log of sensor events
                     <button id="btnGetSensorLog" onclick="SHRIMPWARE.SISClient.getSensorLog()">
                         Show</button>
 
@@ -79,6 +75,16 @@
 
         </div>
 
+
+                <div id="column3">
+                    Show the current sensor config
+                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
+                        Refresh</button>
+                        <div id="testColumn" style="width:400px">
+
+                        </div>
+                </div>
+
         <div id="column2" class="columnSet">
             <div id='sensorSelectDiv'>
                 <h3>Sensors</h3>
@@ -91,7 +97,7 @@
             </div>
 
 
-            <div class="outerDivNoHeight">
+            <div id="selectedSensorDiv" class="outerDivNoHeight">
                 <h3> Selected Sensor Info </h3>
 
             <div id="currentSensorDiv" class="outerDivNoHeight">
@@ -101,7 +107,7 @@
                 </div>
 
             </div>
-
+<!--
             <div id="newSensorSetupDiv" class="outerDivNoHeight">
                 <h4>Setup New Sensor</h4>
                     <div  class="innerDiv">
@@ -115,9 +121,11 @@
                         <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">
                             Save Sensor Setup</button>
                     </div>
-                </div>
-            </div>
 
+                </div>
+
+                                -->
+            </div>
             <div id="commandOutputOuterDiv" class="outerDivNoHeight">
                     <h3>Command Output</h3>
                     <div id="commandOutput"  class="innerDiv" >
@@ -127,7 +135,8 @@
 
         </div>
 
-        <div id="column3"  class="columnSet">
+
+        <div id="XXcolumn3"  class="columnSet">
 
             <div >
                 <h3>Realtime Activity</h3>
@@ -153,6 +162,9 @@
             </div>
 
         </div>
+
+
+
     </div>
 
     <div id="bottomDiv">
@@ -179,5 +191,21 @@
         <input type="button" value="Clear SIS Configuration" onclick="SHRIMPWARE.SISClient.clearSensorConfig()">
         &nbsp;&nbsp;&nbsp;
         <input type="button" value="Cancel" onclick="SHRIMPWARE.SISClient.hideModalClearSISConfig()">
+    </div>
+</div>
+<!-- the following div is used when the user wants to add a new sensor to their SIS config -->
+<div id="modalnewSensorSetupDiv" class="outerDivNoHeight">
+    <h4>Setup New Sensor</h4>
+        <div  class="innerDiv">
+            Step 1: Click to begin.
+            <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">
+                Begin Setup</button>
+            <br> Step 2: Trip the new sensor:
+            <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISClient.setNewSensorWasTripped()" disabled='true'>
+                New Sensor Was Tripped</button>
+            <br> Step 3: Save the new sensor set up.
+            <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">
+                Save Sensor Setup</button>
+        </div>
     </div>
 </div>
