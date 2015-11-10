@@ -352,7 +352,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // adds message to top of the div debugLog with a timestamp
       var logElement = document.getElementById("commandOutput");
       var currentLog = logElement.innerHTML;
-      currentLog = message + "<br>" + currentLog;
+      currentLog = message + "<p>" + currentLog;
       logElement.innerHTML = currentLog;
     },
     commandOutputClear = function() {
@@ -921,7 +921,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
     massageSensorLog = function(sensorLogData) {
     // turn the sensor log record into the displayable output
-
+    // sample SIS event log record:
+    //     (S:5)Family Room 1 PIR tripped at Mon Nov 9 23:39:42 2015 Z (epoch:1447112382Z)
         if (!_sparkCoreData.SISConfigIsRefeshed) {
             message = '';
             console.log('_sparkCoreData was null in massageSensorLog');
@@ -943,7 +944,15 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
             epochDate.setUTCSeconds(epochTimeNumber);
             var epochDateString = epochDate.toLocaleString();
-            message = "At " + epochDateString + ": " + sensorLogData ;
+
+            //remove date and epoch from end of data
+            // xxx wish we didn't have to rely on this kind of thing. Maybe SIS
+            // should send a better formatted log message.
+            var locationAt = sensorLogData.indexOf(" at ");
+            sensorLogData = sensorLogData.substring(0,locationAt);
+
+            //message = "At " + epochDateString + ": " + sensorLogData ;
+            message = sensorLogData + '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + epochDateString;
         }
         else
         {
