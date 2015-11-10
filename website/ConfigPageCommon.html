@@ -164,16 +164,14 @@
 <div id="modalnewSensorSetupDiv" class="modalOuterDiv" >
     <div id="modalnewSensorSetupInnerDiv"  class = "modalInnerDiv">
         <h4>Setup New Sensor</h4>
+        <p id="sensorSetUpName">&nbsp;</p>
         <div  class="innerDiv">
-            Step 1: Click to begin.
-            <button id="btnSetNewSensorBegin" onclick="SHRIMPWARE.SISClient.setNewSensorBegin()">
-                Begin Setup</button>
-            <br> Step 2: Trip the new sensor:
+            Trip the new sensor:
             <button id="btnSetNewSensorWasTripped" onclick="SHRIMPWARE.SISClient.setNewSensorWasTripped()" disabled='true'>
                 New Sensor Was Tripped</button>
-            <br> Step 3: Save the new sensor set up.
-            <button id="btnSaveSensorConfig" onclick="SHRIMPWARE.SISClient.saveSensorConfig()">
-                Save Sensor Setup</button>
+            <p><p>
+            <button id="btnCancelSensorConfig" onclick="SHRIMPWARE.SISClient.cancelSensorConfig()">
+                Cancel</button>
         </div>
     </div>
 </div>

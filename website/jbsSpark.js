@@ -316,9 +316,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             }
             var visibilityState = "block";
             if (isDisabled) visibilityState = "none";
-            document.getElementById("btnSetNewSensorBegin").disabled = isDisabled;
             document.getElementById("btnSetNewSensorWasTripped").disabled = isDisabled;
-            document.getElementById("btnSaveSensorConfig").disabled = isDisabled;
             break;
         }
     },
@@ -1081,7 +1079,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             //} else {
                 _sparkCoreData.LastSensorTrip = data;
                 document.getElementById('btnSetNewSensorWasTripped').disabled = false;
-                document.getElementById('btnSetNewSensorBegin').disabled = true;
             //}
         });
     },
@@ -1090,8 +1087,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // utility function. If something goes wrong in configuring, set to start
         // over again.
         document.getElementById('btnSetNewSensorWasTripped').disabled = true;
-        document.getElementById('btnSetNewSensorBegin').disabled = false;
-
     },
     setNewSensorWasTripped = function() {
         // read the sensor trip.
@@ -1152,6 +1147,10 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             }
             resetSensorRegButtons();
         });
+        document.getElementById("modalnewSensorSetupDiv").style.visibility = "hidden";
+    },
+    cancelSensorConfig = function() {
+        resetSensorRegButtons();
         document.getElementById("modalnewSensorSetupDiv").style.visibility = "hidden";
     },
 
@@ -1479,6 +1478,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         _mode.sensorList.forEach (function(item){
             if (item.pos == sensorPosition) {
                 _sensorDescriptionBeingConfigured = item.display;
+                document.getElementById("sensorSetUpName").innerHTML = item.display;
             }
         });
         logAdd('Ready to configure sensor loc: ', sensorPosition);
@@ -1512,6 +1512,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     getSparkCoreVariableFromHTMLButton: getSparkCoreVariableFromHTMLButton,
     setMode: setMode,
     setNewSensorWasTripped: setNewSensorWasTripped,
+    cancelSensorConfig:cancelSensorConfig,
     debugShow: debugShow,
     saveSensorConfig:saveSensorConfig,
     deviceSelectChanged:deviceSelectChanged,
