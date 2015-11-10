@@ -45,6 +45,26 @@
                 </div>
             </div>
 
+            <div id="configReportDiv" class="outerDivNoHeight" >
+                <h3>Config Report from Selected Device</h3>
+                <div id="currentCoreConfig" class="innerDiv">
+                    No device selected yet.
+                </div>
+            </div>
+
+            <div id="errorMsgDiv" class="outerDivNoHeight" >
+                <h3>Error Messges...</h3>
+                <p>...if any, will display here, most recent on top
+                <div id="errorMessages" class="innerDiv">
+                </div>
+            </div>
+
+
+
+        </div>  <!-- end of column 1 -->
+
+        <div id="column2">
+
             <div id="commandsDiv" class="outerDivNoHeight">
                 <h3>Commands</h3>
                 <div id="commandsInnerDiv" class="innerDiv">
@@ -59,45 +79,28 @@
                     <br>Not implemented yet
                     <button id="btnAnalyzeSensorLog" onclick="SHRIMPWARE.SISClient.analyzeSensorLog()">
                         Analyze Sensor Log</button>
+                    <br>Show the current sensor config
+                    <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
+                            Refresh</button>
+                    <br>
                 </div>
             </div>
 
-            <div id="configReportDiv" class="outerDivNoHeight" >
-                <h3>Config Report from Selected Device</h3>
-                <div id="currentCoreConfig" class="innerDiv">
-                    No device selected yet.
-                </div>
-            </div>
 
-            <div id="errorMsgDiv" class="outerDivNoHeight" >
-                <h3>Error Messges...</h3>
-                <p>...if any, will display here, most recent on top
-                    <div id="errorMessages" class="innerDiv">
-                    </div>
-            </div>
-
-        </div>  <!-- end of column 1 -->
-
-
-        <div id="column2">
-
-            Show the current sensor config
-            <button id="btnGetSensorConfig" onclick="SHRIMPWARE.SISClient.getSensorConfig()">
-                Refresh</button>
             <div id="sensorTableDiv" style="width:400px">
             </div>
 
         </div> <!-- end of column 2 -->
 
-
         <div id="column3" class="columnSet">
 
-            <div id="commandOutputOuterDiv" class="outerDivNoHeight">
+
+            <div>
                 <h3>Command Output</h3>
-                <div id="commandOutput"  class="innerDiv" >
-                    Results of a command will display here.
+                <div id="commandOutput">
                 </div>
             </div>
+
 
             <div >
                 <h3>Realtime Activity</h3>
@@ -108,6 +111,13 @@
             </div>
 
         </div> <!-- end of column 3 -->
+
+
+
+
+
+
+
 
         <div id="column4"  class="columnSet">
 

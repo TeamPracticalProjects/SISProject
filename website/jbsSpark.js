@@ -598,7 +598,6 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                 errorMessageAdd("Event monitor stream has closed.");
                 // xxx here we should try to restart the monitoring again.
             }
-
             var data = eventMonitor.responseText;
             console.log(data);
             if (data.length > 5) {  // a short length indicates a heartbeat from the cloud

@@ -49,6 +49,12 @@
 #configReportDiv {
     min-height:150px;
 }
+#currentCoreConfig {
+    font-size: 75%;
+}
+#commandOutput {
+    min-height: 150px;
+}
 #bottomDiv {
      clear:both;
      padding:30px 0 0 0;
@@ -62,6 +68,9 @@
 }
 #sensorActivityDiv > p {
     margin:0% 0% 0% 0%;
+}
+#sensorTableDiv {
+    padding-top: 20px;
 }
 #sensorTableColPos {
     width: 30px;
