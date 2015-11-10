@@ -524,12 +524,13 @@ SHRIMPWARE.SISClient = (function() { // private module variables
           console.log('- connected?: ' + _activeDevice.connected);
           if (_activeDevice.connected) {
               listAttributes();
+              startMonitoring();    //start listening for events
           } else {
               document.getElementById("deviceListOutput").innerHTML +=
                                 "<br>Your Selected Core Is OFFLINE.";
           }
           logAdd("---");
-          startMonitoring();    //start listening for events
+
       }
 
     },
@@ -573,7 +574,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       disableDeviceButtons(false);
       commandOutputClear();
       sensorConfigOutputClear();
-      getCoreConfiguration();
+      getCoreConfigurationAndSensorConfig();
     },
 
     // --------------------------------------------------------------------
@@ -743,9 +744,13 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     // The config is stored in _sparkCoreData.config
     // The results are then shown in the div id="currentCoreConfig"
     //
-    getCoreConfiguration = function(junk) {
+    getCoreConfigurationAndSensorConfig = function() {
         _sparkCoreData.SISConfigIsRefeshed = false;
-        getSparkCoreVariable("Config", storeCoreConfiguration);
+        getSparkCoreVariable("Config", storeCoreConfigurationAndGetSensorConfig);
+    },
+    storeCoreConfigurationAndGetSensorConfig = function (data){
+        storeCoreConfiguration(data);
+        getSensorConfig();
     },
     storeCoreConfiguration = function(data) {
       // store the core configuration
@@ -984,7 +989,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       //     update the global .SensorConfig. With this current implementation
       //     we have to rely on .SensorConfigIsRefreshed to assure validity
       //     of the .SensorConfig
-      iterateSensorConfig(_sparkCoreData.MaxSensors);
+      iterateSensorConfig(-1);
     },
     iterateSensorConfig = function(buffPosition, callWhenDone, passBackData) {
         // This is called recusively!!!
@@ -992,8 +997,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // again with buffPosition-1. Stop when buffPosition is < 0.
         // Start by calling this with the length of the sensor config array on
         // the spark core.
-        buffPosition = buffPosition - 1;
-        if (buffPosition < 0) {
+        buffPosition++;
+        if (buffPosition > _sparkCoreData.MaxSensors) {
           //here when we are done with recusion
           logAdd("buffPosition is correctly less than 0");
           _sparkCoreData.SensorConfigIsRefreshed = true;
