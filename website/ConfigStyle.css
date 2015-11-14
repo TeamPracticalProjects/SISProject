@@ -8,24 +8,28 @@
     min-width: 300px;
     min-height: 400px;
     padding: 0 2% 0 0;
+    box-sizing: border-box;
 }
 #column2 {
     float:left;
     width:35%
     min-width: 400px;
     min-height: 400px;
+    box-sizing: border-box;
 }
 #column3 {
     float:left;
     width:20%;
     min-width: 300px;
     min-height: 400px;
+    box-sizing: border-box;
 }
 #column4 {
     float:left;
     width:20%;
     min-width: 300px;
     min-height: 50px;
+    box-sizing: border-box;
 }
 #spark-login {
     margin:10px 0px 0px 0px;

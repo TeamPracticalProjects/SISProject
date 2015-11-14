@@ -128,7 +128,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             sensorList: "", showConfig:true},
         ConfigElmStreet: {value: 3, name: "ConfigElmStreet", title: "SIS Elm Street House Setup",
             sensorList: "", showConfig:true},
-        ConfigBigHouse: {value: 4, name: "ConfigBigHouse", title: "SIS Big House Setup",
+        ConfigStandard: {value: 4, name: "ConfigStandard", title: "SIS Client Control",
             sensorList: "", showConfig:true}
     },
     // SIS Firmware expects PIRs in 0-11, Exterior Doors in 12-15, Generic in 16-18, Alarm/Panic in 19.
@@ -161,7 +161,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             {pos: 18, label: "NoOneHome",  display: "No One Home"},
             {pos: 19, label: "AlertButton", display: "Alert Button"}
         ],
-        BigHouse: [
+        Standard: [
             {pos: 0, label: "FamilyRoom1PIR",  display: "Family Room 1 PIR"},
             {pos: 1, label: "FamilyRoom2PIR",   display: "Family Room 2 PIR"},
             {pos: 2, label: "KitchenPIR",   display: "Kitchen PIR"},
@@ -210,9 +210,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             _mode = _eMode.ConfigElmStreet;
             _mode.sensorList = _eType.ElmStreet;
             break;
-        case "ConfigBigHouse":
-            _mode = _eMode.ConfigBigHouse;
-            _mode.sensorList = _eType.BigHouse;
+        case "ConfigStandard":
+            _mode = _eMode.ConfigStandard;
+            _mode.sensorList = _eType.Standard;
             break;
         default:
             alert ('Your web page must call SHRIMPWARE.SIS.setMode with SIS or ConfigSmallApartment');
@@ -246,7 +246,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
         case "ConfigSaratoga":
-        case "ConfigBigHouse":
+        case "ConfigStandard":
 
             document.getElementById("debugLogDiv").style.display = "none";
 
@@ -275,7 +275,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
         case "ConfigSaratoga":
-        case "ConfigBigHouse":
+        case "ConfigStandard":
             var ele = document.getElementsByName("sensor");
             for(var i=0;i<ele.length;i++) {
                 ele[i].checked = isDisabled;
@@ -309,7 +309,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
         case "ConfigSaratoga":
-        case "ConfigBigHouse":
+        case "ConfigStandard":
             var ele = document.getElementsByName("sensor");
             for(var i=0;i<ele.length;i++) {
                 ele[i].checked = isDisabled;
@@ -633,7 +633,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             case "ConfigSmallApartment":
             case "ConfigElmStreet":
             case "ConfigSaratoga":
-            case "ConfigBigHouse":
+            case "ConfigStandard":
                 var heartbeat = document.getElementById("eventHeartbeat");
                 var hbState = heartbeat.getAttribute("data-state");
                 if (hbState == "OFF") {
@@ -707,7 +707,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             case 'ConfigSmallApartment':
             case "ConfigElmStreet":
             case "ConfigSaratoga":
-            case "ConfigBigHouse":
+            case "ConfigStandard":
 /* xxx ANIMATION TO BE REDONE */
                 var sensorLocation = Number(sisEvent.sensorLocation);
                 sensorTripStartAnimation(sensorLocation);
@@ -910,7 +910,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
                 // else data was nil and we've reached the last valid
                 // buffer entry
-                commandOutputAdd("--end of sensor log--");
+                //commandOutputAdd("--end of sensor log--");
                 styleAButton("btnGetSensorLog", 1);
                 styleTheAlert(1);
 
