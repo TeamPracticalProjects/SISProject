@@ -941,10 +941,10 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             var epochTimeNumber = Number(epochTimeString);
 
             var epochDate = new Date(0);
-            var temp = epochDate.getTimezoneOffset();
-            var timezoneDiff = (_sparkCoreData.utcOffset * -60) - epochDate.getTimezoneOffset();
-            epochTimeNumber = epochTimeNumber + (timezoneDiff * 60);
+            var temp = - epochDate.getTimezoneOffset(); //local browswer gmt offset
+            var timezoneDiffMinutes = (_sparkCoreData.utcOffset * 60) - temp; //diff between browser tz and SIS tz
 
+            epochTimeNumber = epochTimeNumber + timezoneDiffMinutes * 60; // this will display the time in SIS timezone
             epochDate.setUTCSeconds(epochTimeNumber);
             var epochDateString = epochDate.toLocaleString();
 
