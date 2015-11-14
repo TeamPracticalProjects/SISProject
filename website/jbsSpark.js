@@ -66,7 +66,7 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISClient = (function() { // private module variables
-  var _version = 23, // Now relies on Config string from the Spark Core (v15 or later)
+  var _version = 24, // Now relies on Config string from the Spark Core (v15 or later)
                     // v17 bug fixes on output of config buttons.
                     // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
                     // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
@@ -81,6 +81,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                     //     made debug output use <p> instead of <br>
                     // v23 complete change to the new sensor table format.
                     //     removed sensor select drop down
+                    // v24 fixed time display to match SIS UTCOffset when displaying sensor log
     _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
@@ -941,10 +942,10 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             var epochTimeNumber = Number(epochTimeString);
 
             var epochDate = new Date(0);
-            var temp = epochDate.getTimezoneOffset();
-            var timezoneDiff = (_sparkCoreData.utcOffset * -60) - epochDate.getTimezoneOffset();
-            epochTimeNumber = epochTimeNumber + (timezoneDiff * 60);
+            var temp = - epochDate.getTimezoneOffset(); //local browswer gmt offset
+            var timezoneDiffMinutes = (_sparkCoreData.utcOffset * 60) - temp; //diff between browser tz and SIS tz
 
+            epochTimeNumber = epochTimeNumber + timezoneDiffMinutes * 60; // this will display the time in SIS timezone
             epochDate.setUTCSeconds(epochTimeNumber);
             var epochDateString = epochDate.toLocaleString();
 
@@ -1005,13 +1006,13 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         } else {
             sisReadASensorConfig(buffPosition, function(sisConfigItem) {
                 _sparkCoreData.SensorConfig[_sparkCoreData.SensorConfig.length] = sisConfigItem;
-                sensorTableUpdateSensorCode(sisConfigItem);
                 iterateSensorConfig(buffPosition, callWhenDone, passBackData);
             });
         }
     },
     sisReadASensorConfig = function(sensorPosition, successFunction) {
         // calls successFunction(data) with an SISConfigItem
+        sensorTableUpdateSensorCode({position:sensorPosition ,sensorCode:"--"});
         var commandParam = "read, " + sensorPosition;
         callSparkCoreFunction("Register", commandParam, function(data) {
             if (data < 0) {
@@ -1137,9 +1138,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
                             } else {
                                 saveSensorConfig();
                                 msgElement.innerHTML = '<br>Sensor was successfully registered!';
-                                sisReadASensorConfig(_sensorPositionBeingConfigured, function(sisConfigItem){
-                                    sensorTableUpdateSensorCode(sisConfigItem);
-                                });
+                                sisReadASensorConfig(_sensorPositionBeingConfigured);
                             }
                         });
                     }
@@ -1465,7 +1464,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     sensorTableClearSensorCodes = function () {
         var positionCells = document.getElementsByClassName('sensorTableCodeCells');
         for (var i = 0; i < positionCells.length; i++) {
-            positionCells[i].innerHTML = '--';
+            positionCells[i].innerHTML = '?';
         }
     },
     sensorTableUpdateSensorCode = function (sisConfigItem) {
