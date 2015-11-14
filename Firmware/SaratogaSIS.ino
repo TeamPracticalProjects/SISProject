@@ -6,7 +6,7 @@
 //#define DEBUG_EVENT
 //#define DEBUG_ADVISORY
 //#define DEBUG_COMMANDS
-#define photon044                 // when present, enables functions that only work with 0.4.4
+#define photon044                 // when present, enables functions that only work with 0.4.4 or higher
 #define CLOUD_LOG
 //
 // Temporary fix for I2C library issue with Photon
@@ -17,32 +17,27 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
-<<<<<<< HEAD
-<<<<<<< HEAD
-//  Version 08j.  8/9/15.  Spark Only.
-=======
 //  Version 08j.  10/13/15.  Spark Only.
->>>>>>> refs/remotes/origin/master
-=======
-//  Version 08j.  10/13/15.  Spark Only.
->>>>>>> origin/development
 const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-// version 08j - added blinks in setup() to show progress.
-=======
-// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to 
+// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
 //  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
->>>>>>> refs/remotes/origin/master
-=======
+//  Version 09.  11/01/15.  Spark Only.
+const String VERSION = "S09";   	// current firmware version
+//
+//  (c) 2015 by Bob Glicksman and Jim Schrempp
+/***************************************************************************************************/
+// version 09 - inverted blinks during setup() to blink off vs blink on, so that it is easy
+//  see that setup() is complete.  Changed to 20 sensors with the following allocations:
+//  loc 0 - 11:  PIR (interiod room)
+//  loc 12 - 15: exterior doors
+//  loc 16 - 18: misc sensors
+//  loc 19: alarm/alert sensor
 // version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
 //  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
 // version 08j - added blinks in setup() to show progress.
->>>>>>> origin/development
 // version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
@@ -157,10 +152,10 @@ const unsigned long ONE_DAY_IN_MILLIS = 86400000L;	// 24*60*60*1000
 const int MAX_WIRELESS_SENSORS = 20;
 const unsigned long FILTER_TIME = 5000L;  // Once a sensor trip has been detected, it requires 5 seconds before a new detection is valid
 const int BUF_LEN = 100;     	// circular buffer size.
-const int MAX_PIR = 9;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
+const int MAX_PIR = 11;      	// PIR sensors are registered in loc 0 through MAX_PIR.  Locations MAX_PIR + 1 to
                             	//  MAX_WIRELESS_SENSORS are non-PIR sensors
-const int MAX_DOOR = 14;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
-const int ALARM_SENSOR = 15;  // When this sensor is tripped, publish an SISAlarm
+const int MAX_DOOR = 15;       // Sensors > MAX_PIR and <= MAX_DOOR are assumed to be exit doors.
+const int ALARM_SENSOR = 19;  // When this sensor is tripped, publish an SISAlarm
 const int MAX_SUBSTRINGS = 6;   // the largest number of comma delimited substrings in a command string
 const byte NUM_BLINKS = 2;  	// number of times to blink the D7 LED when a sensor trip is received
 const unsigned long BLINK_TIME = 300L; // number of milliseconds to turn D7 LED on and off for a blink
@@ -202,48 +197,48 @@ volatile unsigned int *codeTimes;  // pointer to 315 MHz or 433 MHz codeTimes ar
 time_t resetTime;       	// variable to hold the time of last reset
 
    	//	Sensor registration data is held in parallel arrays.
-String sensorName[] =      	{ "FrontRoom PIR",
-                             	"MasterBed PIR",
-                             	"SecondBed PIR",
-                             	"UNREGISTERED S3",
-                             	"UNREGISTERED S4",
-                             	"FrontDoor Sep",
-                             	"GarageDoor Sep",
-                             	"UNREGISTERED S7",
-                             	"UNREGISTERED S8",
-                             	"UNREGISTERED S9",
-                             	"UNREGISTERED S10",
-                             	"UNREGISTERED S11",
-                             	"UNREGISTERED S12",
-                             	"UNREGISTERED S13",
-                             	"UNREGISTERED S14",
-                             	"UNREGISTERED S15",
-                             	"UNREGISTERED S15",
-                             	"UNREGISTERED S15",
-                             	"UNREGISTERED S15",
-                             	"UNREGISTERED S15"
+String sensorName[] =      	{ "unregistered S0",
+                             	"unregistered S1",
+                             	"unregistered S2",
+                             	"unregistered S3",
+                             	"unregistered S4",
+                             	"unregistered S5",
+                             	"unregistered S6",
+                             	"unregistered S7",
+                             	"unregistered S8",
+                             	"unregistered S9",
+                             	"unregistered S10",
+                             	"unregistered S11",
+                             	"unregistered S12",
+                             	"unregistered S13",
+                             	"unregistered S14",
+                             	"unregistered S15",
+                             	"unregistered S16",
+                             	"unregistered S17",
+                             	"unregistered S18",
+                             	"unregistered S19"
                            	};
 
-unsigned long activateCode[] = { 86101,   // sensor 0 (door/window) activation code
-                             	10878847,	// sensor 1 (PIR) activation code
-                             	5439423,	// sensor 2 (keyfob A button) activation code
-                             	0,	// sensor 3 (keyfob B button) activation code
-                             	0,	// sensor 4 (keyfob C button) activation code
-                             	9230958,	// sensor 5 (keyfob D button) activation code
-                             	12899438,   // sensor 6 (water level sensor) activation code
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0,      	// UNREGISTERED SENSOR
-                             	0           // UNREGISTERED SENSOR
+unsigned long activateCode[] = { 0,   	// UNREGISTERED SENSOR
+                             	0,	// UNREGISTERED SENSOR
+                             	0,	// UNREGISTERED SENSOR
+                             	0,	// UNREGISTERED SENSOR
+                             	0,	// UNREGISTERED SENSOR
+                             	0,	// UNREGISTERED SENSOR
+                             	0,   	// UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0,      // UNREGISTERED SENSOR
+                             	0	// UNREGISTERED SENSOR
                            	};
 
 unsigned long lastTripTime[MAX_WIRELESS_SENSORS];	// array to hold the last time a sensor was tripped - for filtering purposes
@@ -307,11 +302,9 @@ boolean comatose = false;   // patient is not moving
 void setup()
 {
 
-
-
-  // Use D7 LED as a test indicator.  Light it for one second at setup time
+  // Use D7 LED as a test indicator.  Light it for the time spent in setup()
   pinMode(D7, OUTPUT);
-
+  digitalWrite(D7, HIGH);
 
   // select virtual device on the eeprom
   if(VIRTUAL_DEVICE_NUM < MAX_VIRTUAL_DEVICES)
@@ -323,9 +316,9 @@ void setup()
     eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 	// initialize the I2C comunication
@@ -333,11 +326,10 @@ void setup()
   Wire.stretchClock(false);
   Wire.begin();
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
     delay(200);
-
+    digitalWrite(D7, HIGH);
+    delay(200);
 
 
   #ifdef DEBUG
@@ -350,18 +342,17 @@ void setup()
   attachInterrupt(INTERRUPT_315, isr315, CHANGE);   // 315 MHz receiver on interrupt 3 => that is pin #D3
   attachInterrupt(INTERRUPT_433, isr433, CHANGE);   // 433 MHz receiver on interrupt 4 => that is pin #D4
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
     delay(200);
-
+    digitalWrite(D7, HIGH);
+    delay(200);
 
   // restore the saved configuration from non-volatile memory
   restoreConfig();
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -378,9 +369,9 @@ void setup()
     //never returns from here
   }
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -399,9 +390,9 @@ void setup()
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
 
-    digitalWrite(D7, HIGH);
-    delay(200);
     digitalWrite(D7, LOW);
+    delay(200);
+    digitalWrite(D7, HIGH);
     delay(200);
 
 
@@ -415,6 +406,9 @@ void setup()
 #ifdef DEBUG
   Serial.println("End of setup()");
 #endif
+
+// turn off the D7 LED at the end of setup()
+digitalWrite(D7, LOW);
 
 }
 
