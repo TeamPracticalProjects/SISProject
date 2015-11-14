@@ -17,14 +17,32 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
+<<<<<<< HEAD
+<<<<<<< HEAD
+//  Version 08j.  8/9/15.  Spark Only.
+=======
 //  Version 08j.  10/13/15.  Spark Only.
+>>>>>>> refs/remotes/origin/master
+=======
+//  Version 08j.  10/13/15.  Spark Only.
+>>>>>>> origin/development
 const String VERSION = "S08j";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+// version 08j - added blinks in setup() to show progress.
+=======
+// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to 
+//  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
+>>>>>>> refs/remotes/origin/master
+=======
 // version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
 //  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
 // version 08j - added blinks in setup() to show progress.
+>>>>>>> origin/development
 // version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
 // version 08i - Added new process to publish circular buffer events to the cloud only
 //  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
