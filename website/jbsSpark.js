@@ -121,7 +121,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     _eMode = { // the web page sets this so that we know what options to
                  // provide to the user
         DoNothing : {},
-        SIS : {value: 0, name: "SIS", title: "SIS Debug Page",
+        SISDebug : {value: 0, name: "SISDebug", title: "SIS Debug Page",
             sensorList: "", showConfig:true},
         ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup",
             sensorList: "", showConfig:true },
@@ -186,7 +186,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         ]
     },
 
-    _mode = _eMode.SIS
+    _mode = _eMode.SISDebug
 
     ;
   var
@@ -196,7 +196,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     setMode = function(modeValue) {
         switch (modeValue) {
         case "":
-        case "SIS":
+        case "SISDebug":
             _mode = _eMode.SIS;
             break;
         case "ConfigSmallApartment":
@@ -241,7 +241,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         document.getElementById("configTitle").innerHTML = _mode.title;
         switch (_mode.name) {
         case "":
-        case "SIS":
+        case "SISDebug":
 
             break;
         case "ConfigSmallApartment":
@@ -269,9 +269,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // God, I hate negative logical variable names!
         switch(_mode.name) {
         case "":
-        case "SIS":
-            document.getElementById("btnGetAttributes").disabled = isDisabled;
-            document.getElementById("btnGetSensorConfig").disabled = isDisabled;
+        case "SISDebug":
+            //document.getElementById("btnGetAttributes").disabled = isDisabled;
+            //document.getElementById("btnGetSensorConfig").disabled = isDisabled;
             break;
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
@@ -305,7 +305,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // God, I hate negative logical variable names!
         switch(_mode.name) {
         case "":
-        case "SIS":
+        case "SISDebug":
             break;
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
@@ -392,7 +392,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         if ( elapsedMillis > 10000) {
             // it's been long enough for the heartbeat to start
             if (rightNow - _lastHeartbeat > 25000) {
-                if (_mode.name == "ConfigSmallApartment") {
+                if (_mode.name != "SISDebug") {
                     var elem = document.getElementById("eventHeartbeat");
                     elem.style.background = "#ff0000";
                     var i = 1;
@@ -429,7 +429,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     // all of the devices registered to the cloud account.
     unselectDevice = function() {
         // when a device is unselected, some of the web page needs to be cleared
-        if (_mode.name == "SIS") {
+        if (_mode.name == "SISDebug") {
             document.getElementById("currentCoreConfig").innerHTML = "select a device";
             document.getElementById("functionButtons").innerHTML = "select a device";
             document.getElementById("variableButtons").innerHTML = "";
@@ -543,7 +543,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         //console.log("global attributes: ", attributes);
       var x;
       logAdd("in listAttributes");
-      if (_mode == _eMode.SIS) {
+      if (_mode == _eMode.SISDebug) {
           disableDeviceButtons(true);
           _attributes.forEach(function(entry) {
               console.log(entry);
@@ -573,7 +573,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       disableDeviceButtons(false);
       commandOutputClear();
       sensorConfigOutputClear();
-      getCoreConfigurationAndSensorConfig();
+      if(_mode != _eMode.SISDebug) {
+          getCoreConfigurationAndSensorConfig();
+      }
     },
 
     // --------------------------------------------------------------------
@@ -702,7 +704,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             //getSensorLog(); // should eventually call analyze log here.
             switch (_mode.name) {
             case '':
-            case 'SIS':
+            case 'SISDebug':
                 alertSISEventReceived();
                 break;
             case 'ConfigSmallApartment':
@@ -1375,7 +1377,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       var output = '<button onclick="SHRIMPWARE.SISClient.callSparkCoreFunctionFromHTMLButton(' +
         "'" + sparkFunctionName + "')" + '"' + "> Call " + sparkFunctionName +
         '</button>' + "&nbsp;&nbsp;" + 'Input: <input type="text" id="' +
-        sparkFunctionNameData + '" size="25" >' + '<br>RtnCode: <input type="text" id="' +
+        sparkFunctionNameData + '" size="50" >' + '<br>RtnCode: <input type="text" id="' +
         sparkFunctionNameReturn + '" size="5" ><p>';
       //console.log(output);
       return output;
@@ -1392,7 +1394,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       var output = '<button onclick="SHRIMPWARE.SISClient.getSparkCoreVariableFromHTMLButton(' +
         "'" + sparkVariableName + "'" + ')"> Retrieve ' + sparkVariableName +
         '</button>' + "&nbsp;&nbsp;" + '<input type="text" id="' +
-        sparkVariableNameReturn + '" size="45" ><p>';
+        sparkVariableNameReturn + '" size="60" ><p>';
       return output;
     },
 
