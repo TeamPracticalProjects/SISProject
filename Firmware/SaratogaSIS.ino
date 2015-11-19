@@ -17,6 +17,13 @@
 // saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
 //  in a controlled environment.
 //
+//  Version 08j.  10/13/15.  Spark Only.
+const String VERSION = "S08j";   	// current firmware version
+//
+//  (c) 2015 by Bob Glicksman and Jim Schrempp
+/***************************************************************************************************/
+// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
+//  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
 //  Version 09.  11/01/15.  Spark Only.
 const String VERSION = "S09";   	// current firmware version
 //
