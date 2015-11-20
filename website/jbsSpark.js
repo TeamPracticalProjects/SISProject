@@ -66,23 +66,10 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISClient = (function() { // private module variables
-  var _version = 24, // Now relies on Config string from the Spark Core (v15 or later)
-                    // v17 bug fixes on output of config buttons.
-                    // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
-                    // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
-                    //     clearSensorConfig clears all 20 positions and sets code to 0.
-                    //     moved creation of device select form to a subroutine for readability
-                    //     made sensor pick list a drop down, always visible, but disabled until a device
-                    //         is selected.
-                    // v20 moved a number of elements around.
-                    //     made buttons visible at all times and only enabled when the can be used.
-                    // v21 more layout changes
-                    // v22 changed module from SISClient to SISClient.
-                    //     made debug output use <p> instead of <br>
-                    // v23 complete change to the new sensor table format.
-                    //     removed sensor select drop down
-                    // v24 fixed time display to match SIS UTCOffset when displaying sensor log
-    _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
+  var _version = 26,
+    //v 26 now expect SIS version 1.00
+
+    _expectedSISCoreVersion = 1.00,  // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
     _startDate = new Date(), // time this javascript object was created
