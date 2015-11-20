@@ -893,7 +893,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     iterateSensorLog = function(buffPosition) {
         // This is called recusively!!!
         // Retrieve the sensor log at buffPosition, then when done call this
-        // again with buffPosition-1. Stop when buffPosition is < 0.
+        // again with buffPosition-1. Stop when buffPosition is < 0 OR
+        // when a retrieved log at buffPosition is null.
         // Start by calling this with the length of the sensor log.
       if (!_sparkCoreData.SISConfigIsRefeshed) {
           console.log('_sparkCoreData is not current in iterateSensorLog');
@@ -925,7 +926,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
                 // else data was nil and we've reached the last valid
                 // buffer entry
-                //commandOutputAdd("--end of sensor log--");
+                commandOutputAdd("--Sensor log done--");
                 styleAButton("btnGetSensorLog", 1);
                 styleTheAlert(1);
 
