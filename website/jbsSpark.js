@@ -503,20 +503,19 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       logAdd("In activeDeviceSet");
       var devList = spark.devices;
       // look throught devList to find the device the user selected
-      var selectedDevice = -1;
+      _activeDevice = null;
       for (var i=0; i < devList.length; i++) {
 
           if (devList[i].id == idWeWant) {
-              selectedDevice = i;
+              _activeDevice = devList[i];
               break;
           }
       }
 
-      if (selectedDevice == -1) {
+      if (_activeDevice === null) {
           logAdd("activeDeviceSet error: device not in list");
       } else {
-          logAdd("Active device is: " + devList[selectedDevice].name);
-          _activeDevice = spark.devices[selectedDevice];
+          logAdd("Active device is: " + _activeDevice.name);
 
           console.log("Active device: " + _activeDevice);
           console.log('Device name: ' + _activeDevice.name);
@@ -550,22 +549,31 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
               if (entry.id == _activeDevice.id) {
                   // create the buttons to call each available Spark.function
-                  var functionButtons = "";
-                  for (x in entry.functions) {
-                      var functionName = entry.functions[x];
-                      logAdd("Function: " + functionName);
-                      functionButtons += formatCallButton(functionName);
-                      //console.log(functionButtons);
+                  var functionButtonsHTML = '';
+                  if (entry.functions) {
+                      for (x in entry.functions) {
+                          var functionName = entry.functions[x];
+                          logAdd("Function: " + functionName);
+                          functionButtonsHTML += formatCallButton(functionName);
+                          //console.log(functionButtons);
+                      }
+                  } else {
+                      functionButtonsHTML = '<p>No Functions reported by cloud';
                   }
-                  document.getElementById("functionButtons").innerHTML = functionButtons;
+                  document.getElementById("functionButtons").innerHTML = functionButtonsHTML;
+
                   // create the buttons to retrieve each available Spark.variable
-                  var variableButtons = '';
-                  for (x in entry.variables) {
-                      var variableName = entry.variables[x];
-                      logAdd("Variable: " + x + " type: " + variableName);
-                      variableButtons += formatRetrieveButton(x);
+                  var variableButtonsHTML = '';
+                  if (entry.variables) {
+                      for (x in entry.variables) {
+                          var variableName = entry.variables[x];
+                          logAdd("Variable: " + x + " type: " + variableName);
+                          variableButtonsHTML += formatRetrieveButton(x);
+                      }
+                  } else {
+                      variableButtonsHTML = '<p>No Variables reported by cloud';
                   }
-                  document.getElementById("variableButtons").innerHTML = variableButtons;
+                  document.getElementById("variableButtons").innerHTML = variableButtonsHTML;
               }
 
           });
@@ -750,8 +758,12 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         getSparkCoreVariable("Config", storeCoreConfigurationAndGetSensorConfig);
     },
     storeCoreConfigurationAndGetSensorConfig = function (data){
-        storeCoreConfiguration(data);
-        getSensorConfig();
+        if (data.length < 20) { // I've seen a timeout return "errornull" but don't know if we can count on that
+            errorMessageAdd ("Unable to retrieve SIS configuration");
+        } else {
+            storeCoreConfiguration(data);
+            getSensorConfig();
+        }
     },
     storeCoreConfiguration = function(data) {
       // store the core configuration
