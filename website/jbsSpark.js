@@ -889,7 +889,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       }
 
       buffPosition = buffPosition + 1;
-      if (buffPosition > _sparkCoreData.cBufLen) {
+      if (buffPosition >= _sparkCoreData.cBufLen) {
         logAdd("buffPosition is now greater than bufferLength");
         _sparkCoreData.SensorLogIsRefreshed = true;
         commandOutputAdd("--end of sensor buffer--");
