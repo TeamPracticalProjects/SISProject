@@ -14,134 +14,29 @@
     #include "i2c_hal.h"
 #endif
 /***************************************************************************************************/
-// saratogaSIS: Test of SIS application to chronically-ill/elder care activity monitoring
-//  in a controlled environment.
+// saratogaSIS: SIS firmware - this is the software that is upoaded to the SIS Hub and performs
+// sensor protocol decoding, sensor trip code processing, logging and cloud communication.  Compile
+// this code and upload (flash) it to your Photon or other particle.io device.  
 //
-//  Version 08j.  10/13/15.  Spark Only.
-const String VERSION = "S08j";   	// current firmware version
+//  This software has been extensively tested with the particle.io Photon.  It will run on the
+// particle.io Core; however, the Core may run out of RAM unless the circular buffer size is
+// reduced from 100 to 25.  This software is also intended ro run on the partcile.io Electron;
+// however, the Electron is not available for testing as of this release.
+//
+//  Use of this software is subject to the Terms of Use, which can be found at:
+//    https://github.com/SISProject/SISDocs/TOU.pdf
+//
+//  This software uses code extracted from the Arduino RC-Switch library:
+//    https://github.com/sui77/rc-switch
+// Portions of this software that have been extracted from RC-Switch are subject to the RC-Switch
+// license, as wel as the the SIS Terms of Use.
+//
+//  Version 1.00.  11/19/15.
+const String VERSION = "1.00";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
-// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
-//  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
-//  Version 09.  11/01/15.  Spark Only.
-const String VERSION = "S09";   	// current firmware version
-//
-//  (c) 2015 by Bob Glicksman and Jim Schrempp
-/***************************************************************************************************/
-// version 09 - inverted blinks during setup() to blink off vs blink on, so that it is easy
-//  see that setup() is complete.  Changed to 20 sensors with the following allocations:
-//  loc 0 - 11:  PIR (interiod room)
-//  loc 12 - 15: exterior doors
-//  loc 16 - 18: misc sensors
-//  loc 19: alarm/alert sensor
-// version 08j - MAX_WIRELESS_SENSORS at 15 and changed MAX_PIR to 9 and MAX_DOOR to
-//  13 and ALARM_SENSOR to 14.  Left the circular buffer (BUF_LEN) at 25.
-// version 08j - added blinks in setup() to show progress.
-// version 08i1 - bug fix to check return code of Spark.publish in publishCircularBuffer
-// version 08i - Added new process to publish circular buffer events to the cloud only
-//  every 2 seconds. Using global g_numToPublish to track how many cbuf events are left to
-//  send. Also removed the lastGTrip functionality introduced in 08d; turns out IFTTT didn't
-//  work the way we thought.
-// Version 08h - added serial debug error message if spark.publish fails. Protected
-//  by ifdef photon044
-// Version 08g - New #define for photon v0.4.4-rc2. The Spark.timeSync() daily call works.
-// Version 8.0f: Added reportFatalError to blink D7 to show error code. Used this
-//  in setup() to indicate that the time never synced with the internet. Also added
-//  a Spark.process() in the time code in case that will help.
-//
-// Version 8.0e: Added a global variable ALARM_SENSOR = 11. If a sensor is tripped
-//  we test for this location. If this matches then we publish an SISAlarm. This
-//  can be monitored by IFTTT to do something more agressive, such as dialing a phone.
-//  The intent is for this to be associated with a button sensor.
-//
-// Version 8.0d: added particle public function lastGTrip() and a global lastGenericTrip.
-//  When a sensor in a position above MAX_DOOR is tripped, that position is stored in
-//  lastGenericTrip. When lastGTrip is called it will return the value of lastGenericTrip
-//  and then set lastGenericTrip to 0. The intention is for IFTTT to call lastGTrip and
-//  then decide to take an action based on the value returned.
-//  This is a bit of a test. The long view is to have a function alertMe() that will keep a
-//  pointer into the circular buffer and return a history of sensor trips each time it is
-//  called.
-// Version 08d: added MAX_DOOR constant. Sensors in posistions above MAX_DOOR are considered
-//  generic sensors and don't affect PIR or DOOR algorithms. Sensors in these positions are just
-//  added to the log. Also increased number of sensors from 10 to 15.
-//
-// Version 08c: added ".c_str()" to the end of line 1145 per a suggestion from Forum to fix the
-//  Photon string early termination problem ( bufferReadout += Time.timeStr(index).c_str(); )
-//
-// Version 08b:  included #ifdef and #incude temporary fix for I2C library issue on Photon.
-//  Uncommented Wire.setSpeed() with this fix.
-//
-// Version 08a:  had to comment out line 215: Wire.setSpeed(CLOCK_SPEED_100KHZ); and line 374:
-//  Spark.SyncTime(); in order to get the code to compile for Photon.  It compiles OK for Core.
-//  Also had to change the varible name "registrationInfo" to "registration" (line 253) and
-//  "circularBufferReadout" to "circularBuff" (line 252) and now these variables are accessible by SIS
-//  Javascript code.
-//
-// Version 08: (1) fixed the registrar function to return -1 if an unkonwn command is issued. (2)
-//  altered readBuffer() to call an new function that supports both cloud and local circular
-//  buffer reading.
-//
-// Version 07 -- skipped (testing)
-//
-// Version 6a -- version 6 caused each of my two test cores to reset, at very different times.  This
-//  was even though I could not cause a reset by power cycling my cable modem.  This version reduces
-//  the buffer size to 25, does not publish each sensor trip, but publishes recorded events.  This
-//  version is for robustness testing of a possible operational scenario where the main logging
-//  is via publication to the cloud with a small local buffer as a backup.
-//
-// Version 6 - put in changes requested by Jim to baseline version 5:
-//  - "no movement" will only be logged when no sensor is tripped for a period of one hour.  Any
-//      subsequent sensor trip (even the same sensor as was last tripped) will be logged to
-//      re-establish the time when movement is again detected.
-//  - retain the ability, based upon #define, to publish to the cloud each of the following: trip,
-//      event, and advisory.
-//  - change the return value of register() to be -1 for any failure (memo - was already there -
-//      no change required.
-//
-// Version 5 - increase buffer size to 50 (then reduced to 40) for testing Core resets.
-//  Also, enable the old notificationand enable the daily time sync.  This is OK with buffer size of 40
-//  but can reset with buffer size of 50.
-//
-// Version 4 - tried to initialize buffers but had flash problems with cBuf of 100.
-// Version 3jbsc - same as (b) but with circular buffer at 25
-// Version 3jbsb - same as (a) but reduced circular buffer to 8 from 100
-// Version 3jbsa - commented out the notification and also the internet time update. Lies 287 and 345
-//
-// Version 3jbs - includes code to pubish advisories, events, trips and commands to the cloud.  Used
-//  for recording these things to a Google spreadsheet for test analysis purposes.  Comment out
-//  the #defines at the top of the code as desired.
-//
-//Version 3 - support I2C eeprom
-//
-// Version 2 - fixed case where core is reset and person is home.
-//
-//Version 01 (branched off of wirelessSensorReceiver version 23 of 3/22/15).
-//  This firmware supports two types of wireless sensors:  PIR and door contact sensors.  PIR
-//  sensors must be registered in sensor locations 0 through MAX_PIR.  All sensors registered in
-//  locations MAX_PIR onward are assumed to be door/window contact sensors.  All sensors are SIS
-//  wireless types operating at either 315 MHz or 433 MHz and using PT2262 or EV1527 protocols.
-//
-// This test is designed to investigate use of these sensors to detect significant levels of
-//  activity around a small home.  The sensor trip data will be filtered prior to logging
-//  according to the following rules:
-//  1.  All door sensor trips are logged.
-//  2.  PIR sensor trips are logged as long as the last sensor tripped was not the same one.
-//  3.  If a door sensor trips but no PIR sensor trips within 10 minutes, "No one is home"
-//  	is logged.
-//  4.  If a door sensor trips and a PIR sensor trips within 10 minutes, "Person is home"
-//  	is logged.
-//  5.  If no PIR sensor is tripped within one hour of the last PIR sensor trip, "NO
-//  	movement" is logged.
-//  6.  If two different PIR sensors trip within 2 seconds of each other, "Multiple
-//  	persons" is logged and all logging is surpressed until a door sensor is tripped.
-//  7.  All log entries are prepended with a one-up sequence number and all log entries are
-//  	timestamped.
-//
-//
-// Debugging via the serial port.  Comment the next line out to disable debugging mode
-//#define DEBUG
+
 /************************************* Global Constants ****************************************************/
 
 const int INTERRUPT_315 = 3;   // the 315 MHz receiver is attached to interrupt 3, which is D3 on an Spark
@@ -298,10 +193,8 @@ byte personHome = UKN;  // initialize to unknown status
 boolean comatose = false;   // patient is not moving
 
 /**************************************** setup() ***********************************************/
-
 void setup()
 {
-
   // Use D7 LED as a test indicator.  Light it for the time spent in setup()
   pinMode(D7, OUTPUT);
   digitalWrite(D7, HIGH);
@@ -570,7 +463,7 @@ void loop()
 }
 /************************************ end of loop() ********************************************/
 
-/************************************ () *********************************************/
+/************************************ logMessage() *********************************************/
 // logMessage(): function to create a log entry that is an advisory message.
 //
 // Arguments:
@@ -1384,8 +1277,6 @@ String cBufRead(int offset)
 }
 /****************************************** end of cBufRead() ***************************************/
 
-
-
 /****************************************** publishCircularBuffer () ************************/
 // publishCircularBuffer()
 //
@@ -1422,13 +1313,10 @@ void publishCircularBuffer() {
 
 }
 
-
-
 /****************************************** End of publishCircularBuffer () ************************/
 
-
-
-
+/****************************************** simulateSensor() ***************************************/
+// simulateSensor(): this funtion is used to simulate sensors - for testing only.
 #ifdef TESTRUN
 
 //This routine is called every iteration of the main loop. Based on the current
@@ -1473,6 +1361,7 @@ void simulateSensor() {
 
 #endif  /* TESTRUN */
 
+/********************************** end of simulateSensor() ***********************************/
 
 /************************************** isr315() ***********************************************/
 //This is the interrupt service routine for interrupt 3 (315 MHz receiver)
@@ -1583,7 +1472,6 @@ void process433()
   return;
 }
 /***********************************end of isr433() ********************************************/
-
 
 /*************************************** decode() ************************************************/
 // decode():  Function to decode data in the appropriate codeTimes array for the data that was
@@ -1832,7 +1720,7 @@ String makeNameValuePair(String name, String value)
 
 /********************************* end of publishEvent() *******************************/
 
-/********************************* fatal error code reporting *******************************/
+/****************************** fatal error code reporting *****************************/
 // Call this to flash D7 continuously. This routine never exits.
 //
 // Error codes
@@ -1882,7 +1770,4 @@ void reportFatalError(int errorNum)
 
 }
 
-
-
-
-/********************************* fatal error code reporting *******************************/
+/***************************** end of fatal error code reporting ****************************/
