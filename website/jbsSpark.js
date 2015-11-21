@@ -66,23 +66,10 @@ if (typeof SHRIMPWARE === "undefined") {
   var SHRIMPWARE = {};
 } // Start of module declaration
 SHRIMPWARE.SISClient = (function() { // private module variables
-  var _version = 24, // Now relies on Config string from the Spark Core (v15 or later)
-                    // v17 bug fixes on output of config buttons.
-                    // v18 uses ConfigPageCommon.html. Adds ConfigBigHouse
-                    // v19 PIRs in 0-9, Separation Doors in 10-14, Generic in 15-18, Alarm/Panic in 19.
-                    //     clearSensorConfig clears all 20 positions and sets code to 0.
-                    //     moved creation of device select form to a subroutine for readability
-                    //     made sensor pick list a drop down, always visible, but disabled until a device
-                    //         is selected.
-                    // v20 moved a number of elements around.
-                    //     made buttons visible at all times and only enabled when the can be used.
-                    // v21 more layout changes
-                    // v22 changed module from SISClient to SISClient.
-                    //     made debug output use <p> instead of <br>
-                    // v23 complete change to the new sensor table format.
-                    //     removed sensor select drop down
-                    // v24 fixed time display to match SIS UTCOffset when displaying sensor log
-    _expectedSISCoreVersion = 20, // this Javascript expects this SIS code in the core
+  var _version = 26,
+    //v 26 now expect SIS version 1.00
+
+    _expectedSISCoreVersion = 1.00,  // this Javascript expects this SIS code in the core
 
     _mainLoop,  // timer that pops every 0.5 seconds, all the time
     _startDate = new Date(), // time this javascript object was created
@@ -121,7 +108,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     _eMode = { // the web page sets this so that we know what options to
                  // provide to the user
         DoNothing : {},
-        SIS : {value: 0, name: "SIS", title: "SIS Debug Page",
+        SISDebug : {value: 0, name: "SISDebug", title: "SIS Debug Page",
             sensorList: "", showConfig:true},
         ConfigSmallApartment: {value: 1, name: "ConfigSmallApartment", title: "SIS Small Apartment Setup",
             sensorList: "", showConfig:true },
@@ -186,7 +173,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         ]
     },
 
-    _mode = _eMode.SIS
+    _mode = _eMode.SISDebug
 
     ;
   var
@@ -196,7 +183,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     setMode = function(modeValue) {
         switch (modeValue) {
         case "":
-        case "SIS":
+        case "SISDebug":
             _mode = _eMode.SIS;
             break;
         case "ConfigSmallApartment":
@@ -241,7 +228,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         document.getElementById("configTitle").innerHTML = _mode.title;
         switch (_mode.name) {
         case "":
-        case "SIS":
+        case "SISDebug":
 
             break;
         case "ConfigSmallApartment":
@@ -269,9 +256,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // God, I hate negative logical variable names!
         switch(_mode.name) {
         case "":
-        case "SIS":
-            document.getElementById("btnGetAttributes").disabled = isDisabled;
-            document.getElementById("btnGetSensorConfig").disabled = isDisabled;
+        case "SISDebug":
+            //document.getElementById("btnGetAttributes").disabled = isDisabled;
+            //document.getElementById("btnGetSensorConfig").disabled = isDisabled;
             break;
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
@@ -305,7 +292,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // God, I hate negative logical variable names!
         switch(_mode.name) {
         case "":
-        case "SIS":
+        case "SISDebug":
             break;
         case "ConfigSmallApartment":
         case "ConfigElmStreet":
@@ -392,7 +379,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         if ( elapsedMillis > 10000) {
             // it's been long enough for the heartbeat to start
             if (rightNow - _lastHeartbeat > 25000) {
-                if (_mode.name == "ConfigSmallApartment") {
+                if (_mode.name != "SISDebug") {
                     var elem = document.getElementById("eventHeartbeat");
                     elem.style.background = "#ff0000";
                     var i = 1;
@@ -429,7 +416,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     // all of the devices registered to the cloud account.
     unselectDevice = function() {
         // when a device is unselected, some of the web page needs to be cleared
-        if (_mode.name == "SIS") {
+        if (_mode.name == "SISDebug") {
             document.getElementById("currentCoreConfig").innerHTML = "select a device";
             document.getElementById("functionButtons").innerHTML = "select a device";
             document.getElementById("variableButtons").innerHTML = "";
@@ -503,20 +490,19 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       logAdd("In activeDeviceSet");
       var devList = spark.devices;
       // look throught devList to find the device the user selected
-      var selectedDevice = -1;
+      _activeDevice = null;
       for (var i=0; i < devList.length; i++) {
 
           if (devList[i].id == idWeWant) {
-              selectedDevice = i;
+              _activeDevice = devList[i];
               break;
           }
       }
 
-      if (selectedDevice == -1) {
+      if (_activeDevice === null) {
           logAdd("activeDeviceSet error: device not in list");
       } else {
-          logAdd("Active device is: " + devList[selectedDevice].name);
-          _activeDevice = spark.devices[selectedDevice];
+          logAdd("Active device is: " + _activeDevice.name);
 
           console.log("Active device: " + _activeDevice);
           console.log('Device name: ' + _activeDevice.name);
@@ -543,29 +529,38 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         //console.log("global attributes: ", attributes);
       var x;
       logAdd("in listAttributes");
-      if (_mode == _eMode.SIS) {
+      if (_mode == _eMode.SISDebug) {
           disableDeviceButtons(true);
           _attributes.forEach(function(entry) {
               console.log(entry);
 
               if (entry.id == _activeDevice.id) {
                   // create the buttons to call each available Spark.function
-                  var functionButtons = "";
-                  for (x in entry.functions) {
-                      var functionName = entry.functions[x];
-                      logAdd("Function: " + functionName);
-                      functionButtons += formatCallButton(functionName);
-                      //console.log(functionButtons);
+                  var functionButtonsHTML = '';
+                  if (entry.functions) {
+                      for (x in entry.functions) {
+                          var functionName = entry.functions[x];
+                          logAdd("Function: " + functionName);
+                          functionButtonsHTML += formatCallButton(functionName);
+                          //console.log(functionButtons);
+                      }
+                  } else {
+                      functionButtonsHTML = '<p>No Functions reported by cloud';
                   }
-                  document.getElementById("functionButtons").innerHTML = functionButtons;
+                  document.getElementById("functionButtons").innerHTML = functionButtonsHTML;
+
                   // create the buttons to retrieve each available Spark.variable
-                  var variableButtons = '';
-                  for (x in entry.variables) {
-                      var variableName = entry.variables[x];
-                      logAdd("Variable: " + x + " type: " + variableName);
-                      variableButtons += formatRetrieveButton(x);
+                  var variableButtonsHTML = '';
+                  if (entry.variables) {
+                      for (x in entry.variables) {
+                          var variableName = entry.variables[x];
+                          logAdd("Variable: " + x + " type: " + variableName);
+                          variableButtonsHTML += formatRetrieveButton(x);
+                      }
+                  } else {
+                      variableButtonsHTML = '<p>No Variables reported by cloud';
                   }
-                  document.getElementById("variableButtons").innerHTML = variableButtons;
+                  document.getElementById("variableButtons").innerHTML = variableButtonsHTML;
               }
 
           });
@@ -573,7 +568,9 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       disableDeviceButtons(false);
       commandOutputClear();
       sensorConfigOutputClear();
-      getCoreConfigurationAndSensorConfig();
+      if(_mode != _eMode.SISDebug) {
+          getCoreConfigurationAndSensorConfig();
+      }
     },
 
     // --------------------------------------------------------------------
@@ -702,7 +699,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
             //getSensorLog(); // should eventually call analyze log here.
             switch (_mode.name) {
             case '':
-            case 'SIS':
+            case 'SISDebug':
                 alertSISEventReceived();
                 break;
             case 'ConfigSmallApartment':
@@ -748,8 +745,12 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         getSparkCoreVariable("Config", storeCoreConfigurationAndGetSensorConfig);
     },
     storeCoreConfigurationAndGetSensorConfig = function (data){
-        storeCoreConfiguration(data);
-        getSensorConfig();
+        if (data.length < 20) { // I've seen a timeout return "errornull" but don't know if we can count on that
+            errorMessageAdd ("Unable to retrieve SIS configuration");
+        } else {
+            storeCoreConfiguration(data);
+            getSensorConfig();
+        }
     },
     storeCoreConfiguration = function(data) {
       // store the core configuration
@@ -879,7 +880,8 @@ SHRIMPWARE.SISClient = (function() { // private module variables
     iterateSensorLog = function(buffPosition) {
         // This is called recusively!!!
         // Retrieve the sensor log at buffPosition, then when done call this
-        // again with buffPosition-1. Stop when buffPosition is < 0.
+        // again with buffPosition-1. Stop when buffPosition is < 0 OR
+        // when a retrieved log at buffPosition is null.
         // Start by calling this with the length of the sensor log.
       if (!_sparkCoreData.SISConfigIsRefeshed) {
           console.log('_sparkCoreData is not current in iterateSensorLog');
@@ -887,7 +889,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       }
 
       buffPosition = buffPosition + 1;
-      if (buffPosition > _sparkCoreData.cBufLen) {
+      if (buffPosition >= _sparkCoreData.cBufLen) {
         logAdd("buffPosition is now greater than bufferLength");
         _sparkCoreData.SensorLogIsRefreshed = true;
         commandOutputAdd("--end of sensor buffer--");
@@ -911,7 +913,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
 
                 // else data was nil and we've reached the last valid
                 // buffer entry
-                //commandOutputAdd("--end of sensor log--");
+                commandOutputAdd("--Sensor log done--");
                 styleAButton("btnGetSensorLog", 1);
                 styleTheAlert(1);
 
@@ -1375,7 +1377,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       var output = '<button onclick="SHRIMPWARE.SISClient.callSparkCoreFunctionFromHTMLButton(' +
         "'" + sparkFunctionName + "')" + '"' + "> Call " + sparkFunctionName +
         '</button>' + "&nbsp;&nbsp;" + 'Input: <input type="text" id="' +
-        sparkFunctionNameData + '" size="25" >' + '<br>RtnCode: <input type="text" id="' +
+        sparkFunctionNameData + '" size="50" >' + '<br>RtnCode: <input type="text" id="' +
         sparkFunctionNameReturn + '" size="5" ><p>';
       //console.log(output);
       return output;
@@ -1392,7 +1394,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
       var output = '<button onclick="SHRIMPWARE.SISClient.getSparkCoreVariableFromHTMLButton(' +
         "'" + sparkVariableName + "'" + ')"> Retrieve ' + sparkVariableName +
         '</button>' + "&nbsp;&nbsp;" + '<input type="text" id="' +
-        sparkVariableNameReturn + '" size="45" ><p>';
+        sparkVariableNameReturn + '" size="60" ><p>';
       return output;
     },
 
