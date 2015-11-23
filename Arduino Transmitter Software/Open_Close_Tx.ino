@@ -9,6 +9,14 @@
 //
 //  This software uses blocking code.  This is OK since it monitors only one sensor (contact).
 //  This software has been bebugged and tested using RC-SWITCH.  
+//  Use of this software is subject to the Terms of Use, which can be found at:
+//    https://github.com/SISProject/SISDocs/blob/master/Terms_of_Use_License_and_Disclaimer.pdf
+//
+//  This software uses code extracted from the Arduino RC-Switch library:
+//    https://github.com/sui77/rc-switch
+// Portions of this software that have been extracted from RC-Switch are subject to the RC-Switch
+// license, as well as the the SIS Terms of Use.
+//
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /******************************************************************************************************/

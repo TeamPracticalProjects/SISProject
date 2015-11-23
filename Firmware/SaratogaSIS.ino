@@ -29,7 +29,7 @@
 //  This software uses code extracted from the Arduino RC-Switch library:
 //    https://github.com/sui77/rc-switch
 // Portions of this software that have been extracted from RC-Switch are subject to the RC-Switch
-// license, as wel as the the SIS Terms of Use.
+// license, as well as the the SIS Terms of Use.
 //
 //  Version 1.00.  11/19/15.
 const String VERSION = "1.00";   	// current firmware version
