@@ -24,7 +24,7 @@
 // however, the Electron is not available for testing as of this release.
 //
 //  Use of this software is subject to the Terms of Use, which can be found at:
-//    https://github.com/SISProject/SISDocs/TOU.pdf
+//    https://github.com/SISProject/SISDocs/blob/master/Terms_of_Use_License_and_Disclaimer.pdf
 //
 //  This software uses code extracted from the Arduino RC-Switch library:
 //    https://github.com/sui77/rc-switch
