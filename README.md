@@ -17,4 +17,5 @@ as long as you provide us feedback on how it works and ideas on how to improve i
 Of course collaboration could also mean that you want to add functions to the core firmware or javascript web site. 
 That would be cool too.
 
-Send us a message to join in the fun.
+Send us a message to join in the fun: SISProject@shrimpware.com
+
