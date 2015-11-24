@@ -999,7 +999,7 @@ SHRIMPWARE.SISClient = (function() { // private module variables
         // Start by calling this with the length of the sensor config array on
         // the spark core.
         buffPosition++;
-        if (buffPosition > _sparkCoreData.MaxSensors) {
+        if (buffPosition >= _sparkCoreData.MaxSensors) {
           //here when we are done with recusion
           logAdd("buffPosition is correctly less than 0");
           _sparkCoreData.SensorConfigIsRefreshed = true;
