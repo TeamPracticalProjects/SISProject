@@ -2,6 +2,7 @@
                                  // config web page to display live events
 //#define TESTRUN
 //#define DEBUG                   // turns on Serial port messages
+#define DEBUG_LED                 // enables LED toggling in toggleD7LED()
 #define D7LED_DELAY 200           // how long to wait when toggling LED for debugging
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
@@ -444,13 +445,16 @@ void loop()
 
 /************************************ toggleD7LED() ********************************************/
 // toggleD7LED(): D7 LED is used as a test indicator. This function allows you to toggle it.
+// Only actually toggle if DEBUG_LED is defined
 //
 void toggleD7LED(void)
 {
+  #ifdef DEBUG_LED
   digitalWrite(D7, LOW);
   delay(D7LED_DELAY);
   digitalWrite(D7, HIGH);
   delay(D7LED_DELAY);
+  #endif
 }
 
 /************************************ end toggleD7LED loop() ***********************************/
