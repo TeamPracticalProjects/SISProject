@@ -2,6 +2,8 @@
                                  // config web page to display live events
 //#define TESTRUN
 //#define DEBUG                   // turns on Serial port messages
+#define DEBUG_LED                 // enables LED toggling in toggleD7LED()
+#define D7LED_DELAY 200           // how long to wait when toggling LED for debugging
 //#define DEBUG_TRIP
 //#define DEBUG_EVENT
 //#define DEBUG_ADVISORY
@@ -209,21 +211,14 @@ void setup()
     eepromOffset = MAX_VIRTUAL_DEVICES - 1;
   }
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
+  toggleD7LED();
 
 	// initialize the I2C comunication
   Wire.setSpeed(CLOCK_SPEED_100KHZ);
   Wire.stretchClock(false);
   Wire.begin();
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
-
+  toggleD7LED();
 
   #ifdef DEBUG
 	 Serial.begin(9600);
@@ -235,19 +230,12 @@ void setup()
   attachInterrupt(INTERRUPT_315, isr315, CHANGE);   // 315 MHz receiver on interrupt 3 => that is pin #D3
   attachInterrupt(INTERRUPT_433, isr433, CHANGE);   // 433 MHz receiver on interrupt 4 => that is pin #D4
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
+  toggleD7LED();
 
   // restore the saved configuration from non-volatile memory
   restoreConfig();
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
-
+  toggleD7LED();
 
   // wait for the Core to synchronise time with the Internet
   while(Time.year() <= 1970 && millis() < 30000)
@@ -262,11 +250,7 @@ void setup()
     //never returns from here
   }
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
-
+  toggleD7LED();
 
   // Publish local configuration information in config[]
   resetTime = Time.now();    	// the current time = time of last reset
@@ -283,11 +267,7 @@ void setup()
   // Publish a start up event notification
   Spark.function("publistTestE", publishTestE); // for testing events
 
-    digitalWrite(D7, LOW);
-    delay(200);
-    digitalWrite(D7, HIGH);
-    delay(200);
-
+  toggleD7LED();
 
   // Initialize the lastTripTime[] array
   for (int i = 0; i < MAX_WIRELESS_SENSORS; i++)
@@ -462,6 +442,22 @@ void loop()
 
 }
 /************************************ end of loop() ********************************************/
+
+/************************************ toggleD7LED() ********************************************/
+// toggleD7LED(): D7 LED is used as a test indicator. This function allows you to toggle it.
+// Only actually toggle if DEBUG_LED is defined
+//
+void toggleD7LED(void)
+{
+  #ifdef DEBUG_LED
+  digitalWrite(D7, LOW);
+  delay(D7LED_DELAY);
+  digitalWrite(D7, HIGH);
+  delay(D7LED_DELAY);
+  #endif
+}
+
+/************************************ end toggleD7LED loop() ***********************************/
 
 /************************************ logMessage() *********************************************/
 // logMessage(): function to create a log entry that is an advisory message.
