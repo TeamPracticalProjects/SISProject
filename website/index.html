@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>SIS Control Page</title>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+<meta content="A page to control the Standalone Intelligent Sensor. This is an open project based on
+the Particle.io system. It currently supports the Photon, should work with the new Electron, and
+has worked with the Core." name="Description">
+<meta content="Photon Electron core Particle.io internet of things IoT remote wireless sensors " name="Keywords">
+<script language="javascript" src="/rpi/utils.js" type="text/javascript"></script>
+<link href="/rpi/rpi.css" rel="stylesheet" type="text/css">
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-1346932-2']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+</head>
+
+<body style="min-width: 500px">
+<div id="top">
+</div>
+<div id="left">
+</div>
+<div style="width: 500px; padding: 50px 20px 20px 50px; float: left;">
+
+	<div style="clear: both; width: 500px; height: auto">
+		<h1>SIS - Smart Intelligent Sensor</h1>
+        <div id="jbs_jsversion">
+        </div>
+	</div>
+
+
+	<div name="leftcolumn" style="float:left; max-width:600px">
+
+        <p>Welcome to the SIS Control center. The Standalone Intelligent Sensor is an
+        open collaboration between Bob Glicksman and Jim Schrempp. It is a
+        platform to make it simple (relatively speaking) to add remote monitoring
+        to any location. Today the SIS runs on a Photon from <a href="http://particle.io" target="new">Particle.io</a>,
+        inexpensive off the shelf wireless sensors, and
+        a bit of Javascript to run a control web page.
+        <p>It is all available on <a href="https://github.com/SISProject" target="new">GitHub</a>.
+        <h2>Control Pages</h2>
+        <ul>
+            <li><a href="ConfigBigHouse.html">Standard SIS Client Control</a><br><br></li>
+            <li><a href="DebugSIS.html">Raw Debugging</a><br><br></li>
+
+        </ul>
+        <h2>Custom Configs</h2>
+        <p>These are config pages that have been customized to a particular use case. <thead>
+            The only difference over the standard page is that the number of sensors and sensor
+            names may have been changed, and perhaps the sensor order. This customization is
+            all done easily with some constants at the top of the Javascript file.
+        </thead>
+        <ul>
+            <li><a href="ConfigSmallApartment.html">Configure for a Small Apartment</a><br><br></li>
+            <li><a href="ConfigSaratoga.html">Configure Saratoga Townhouse</a><br><br></li>
+            <li><a href="ConfigElmStreet.html">Configure Elm Street</a><br><br></li>
+        </ul>
+        <p>If you are interested in our work, send us an email and we can talk
+            about getting you involved!
+	</div>
+
+	<div name="bottomdiv"style="clear:both; padding:30px 0 0 0">
+		<p>(c) 2015 Jim Schrempp and Bob Glicksman All Rights Reserved</p>
+	</div>
+
+
+
+</div>
+
+</body>
+
+</html>
