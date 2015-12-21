@@ -10,14 +10,16 @@
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /******************************************************************************************************/
-// Version 001.  Has two defined constants for the contact OPEN and CLOSE events.  Change these
-//  contants and recompile to suit the code needs of any given test.
+// Version 001.  Has two defined constants for the codes: CODE_ONE and CODE_TWO. DELAY_SECONDS is the
+//  minimum time between code sends; it could be longer depending upon how long it takes for a
+//  code to actually be sent.
 //  When testing an SIS Hub, these codes should be registered as "door separation sensors." If the codes
 //  are registered as PIRs, then receiving them is subject to a blackout period between successive
 //  receipts of the same code.
 
 /**************************************** GLOBAL CONSTANTS ********************************************/
 // #define DEBUG      //uncomment to use serial port to debug
+const int DELAY_SECONDS = 4;            // minimum seconds to wait between successive code sends
 const unsigned long CODE_ONE = 95117ul;
 const unsigned long CODE_TWO = 94070ul;
 const int TX_PIN = 4;                  // transmitter on Digital pin 4
@@ -43,7 +45,7 @@ void loop()
 {
 
     static time_t lastSendTime = 0;
-    if (Time.now() - lastSendTime > 4)
+    if (Time.now() - lastSendTime > DELAY_SECONDS)
     {
         lastSendTime = Time.now();
 
@@ -158,49 +160,3 @@ void sendSync()
   return;
 }
 /************************************** end of sendSync() *********************************************/
-
-/**************************************** readContact() ***********************************************/
-// readContact():  function that reads a digital value (input with internal pullup) on the CONTACT_PIN.
-//  The contact value is tested for bounce and noise and if it is valid, the funtion sets the global
-//  variable contactState accordingly and returns true.  Otherwise, the gobal variable is not changed
-//  and the function returns false.  This function is blocking.
-//
-// Return:  true of a valid contact value is read; false otherwise.  A valid contact value is declared
-//  if the same value is read from the CONTACT_PIN in two successive reading separated by 10 ms debounce
-//  time.
-
-boolean readContact()
-{
-  boolean firstRead, secondRead;
-
-  if(digitalRead(CONTACT_PIN) == HIGH)
-  {
-    firstRead = false;
-  }
-  else
-  {
-    firstRead = true;
-  }
-
-  delay(10);      // wait 10 ms for noise and bounce
-  if(digitalRead(CONTACT_PIN) == HIGH)
-  {
-    secondRead = false;
-  }
-  else
-  {
-    secondRead = true;
-  }
-
-  // if the two reads are the same, proices as valid contact state
-  if (secondRead == firstRead)
-  {
-    contactState = secondRead;
-    return true;
-  }
-  else
-  {
-    return false;  // noise
-  }
-}
-/************************************* end of readContact() *******************************************/
