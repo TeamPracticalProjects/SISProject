@@ -1,6 +1,7 @@
 
 /******************************************************************************************************/
-// TestBeacon:  Used to send one of two alternating codes. Useful for testing the SIS Hub receive code.
+// TestBeaconFixedLoop:  Used to send one of two alternating sensor codes a predetermined number of times.
+// Useful for testing the SIS Hub receive code.
 // The wireless code is a 24 bit code word + sync that is compatible with the PT2262 and EV1527 protocols.
 //
 //  A 315 MHz or 433 MHz wireless transmitter is connected to Arduino digital pin 4.
@@ -12,14 +13,19 @@
 /******************************************************************************************************/
 // Version 001.  Has two defined constants for the codes: CODE_ONE and CODE_TWO. DELAY_SECONDS is the
 //  minimum time between code sends; it could be longer depending upon how long it takes for a
-//  code to actually be sent.
-//  When testing an SIS Hub, these codes should be registered as "door separation sensors." If the codes
+//  code to actually be sent.  NUM_LOOPS is the number of times to send a code before exiting
+//  setup() and going into the do-nothing loop().
+//
+//  When testing an SIS Hub, these codes should be registered as "misc sensors." If the codes
 //  are registered as PIRs, then receiving them is subject to a blackout period between successive
-//  receipts of the same code.
+//  receipts of the same code.  If they are registered as door separation sensors, then the SIS logs
+//  may contain inferences in addition to sensor trips and it will be harder to test for missed
+//  code transmissions.
 
 /**************************************** GLOBAL CONSTANTS ********************************************/
 // #define DEBUG      //uncomment to use serial port to debug
 const int DELAY_SECONDS = 4;            // minimum seconds to wait between successive code sends
+const int NUM_LOOPS = 100;		// number of codes to send and then end
 const unsigned long CODE_ONE = 95117ul;
 const unsigned long CODE_TWO = 94070ul;
 const int TX_PIN = 4;                  // transmitter on Digital pin 4
@@ -37,32 +43,44 @@ void setup()
   #ifdef DEBUG
     Serial.begin(9600);
   #endif
+
+  for (int i = 0; i < NUM_LOOPS; i++)
+  {
+    delay(DELAY_SECONDS * 1000);
+
+    if (codeWord == CODE_ONE)
+    {
+      codeWord = CODE_TWO;
+    }
+    else
+    {
+      codeWord = CODE_ONE;
+    }
+
+    // send the code word 20 times -
+    digitalWrite(LED_PIN, HIGH);
+    for (int i = 0; i < 20; i++)
+    {
+      sendCodeWord(codeWord);
+    }
+    digitalWrite(LED_PIN, LOW);
+
+    Spark.process();
+
+  }
+
 }
 /***************************************** end of setup() *********************************************/
 
 /******************************************** loop() **************************************************/
 void loop()
 {
+    // just flash the D13 ED fast to show that the sensor code transmits are done
 
-    static time_t lastSendTime = 0;
-    if (Time.now() - lastSendTime > DELAY_SECONDS)
-    {
-        lastSendTime = Time.now();
-
-        if (codeWord == CODE_ONE) {
-            codeWord = CODE_TWO;
-        } else {
-            codeWord = CODE_ONE;
-        }
-        // send the code word 20 times -
-        digitalWrite(LED_PIN, HIGH);
-        for (int i = 0; i < 20; i++)
-        {
-            sendCodeWord(codeWord);
-        }
-        digitalWrite(LED_PIN, LOW);
-
-    }
+    digitalWrite(LED_PIN, HIGH);
+    delay(150);
+    digitalWrite(LED_PIN, LOW);
+    delay(150);
 
 }
 /***************************************** end of loop() **********************************************/
