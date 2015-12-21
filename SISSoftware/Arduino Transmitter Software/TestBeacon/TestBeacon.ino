@@ -1,47 +1,39 @@
 
 /******************************************************************************************************/
-// Open_Close_Tx:  monitor a contact and send a wireless code when the contact closes and then send
-//  another wireless code when the contact opens.  The wireless code is a 24 bit code word + sync
-//  that is compatible with the PT2262 and EV1527 protocols.  
-//  
-//  A 315 MHz or 433 MHz wireless transmitter is connected to Arduino digital pin 4.  A contact
-//  is connected to Arduino digital pin 8.  Arduino internal pullup is used on the contact.
+// TestBeacon:  Used to send one of two alternating codes. Useful for testing the SIS Hub receive code.
+// The wireless code is a 24 bit code word + sync that is compatible with the PT2262 and EV1527 protocols.
 //
-//  This software uses blocking code.  This is OK since it monitors only one sensor (contact).
-//  This software has been bebugged and tested using RC-SWITCH.  
-//  Use of this software is subject to the Terms of Use, which can be found at:
-//    https://github.com/SISProject/SISDocs/blob/master/Terms_of_Use_License_and_Disclaimer.pdf
+//  A 315 MHz or 433 MHz wireless transmitter is connected to Arduino digital pin 4.
 //
-//  This software uses code extracted from the Arduino RC-Switch library:
-//    https://github.com/sui77/rc-switch
-// Portions of this software that have been extracted from RC-Switch are subject to the RC-Switch
-// license, as well as the the SIS Terms of Use.
-//
+//  This software uses blocking code.  This is OK since it only sends one code at a time.
+//  This software has been bebugged and tested using RC-SWITCH.
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /******************************************************************************************************/
-// Version 001.  Has two defined constants for the contact OPEN and CLOSE events.  Change these
-//  contants and recompile to suit the code needs of any given system.
+// Version 001.  Has two defined constants for the codes: CODE_ONE and CODE_TWO. DELAY_SECONDS is the
+//  minimum time between code sends; it could be longer depending upon how long it takes for a
+//  code to actually be sent.
+//  When testing an SIS Hub, these codes should be registered as "door separation sensors." If the codes
+//  are registered as PIRs, then receiving them is subject to a blackout period between successive
+//  receipts of the same code.
 
 /**************************************** GLOBAL CONSTANTS ********************************************/
 // #define DEBUG      //uncomment to use serial port to debug
-const unsigned long OPEN_CODE = 321789ul;
-const unsigned long CLOSE_CODE = 5810559ul;
+const int DELAY_SECONDS = 4;            // minimum seconds to wait between successive code sends
+const unsigned long CODE_ONE = 95117ul;
+const unsigned long CODE_TWO = 94070ul;
 const int TX_PIN = 4;                  // transmitter on Digital pin 4
-const int LED_PIN = 13;
-const int CONTACT_PIN = 8;             // pushbutton or other contact on Digital pin 8
+const int LED_PIN = 7;
 const int BAUD_TIME = 500;             // basic signalling unit is 400 us
 
 /**************************************** GLOBAL VARIABLES ********************************************/
-boolean contactState = false;
-
+unsigned long codeWord = CODE_ONE;
 /******************************************** setup() *************************************************/
 void setup()
 {
   pinMode(TX_PIN, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
-  pinMode(CONTACT_PIN, INPUT);
-  
+
   #ifdef DEBUG
     Serial.begin(9600);
   #endif
@@ -51,41 +43,27 @@ void setup()
 /******************************************** loop() **************************************************/
 void loop()
 {
-  static boolean oldContactState = false;
-  unsigned long codeWord;
-  
-  // test the contact for a valid reading and state change if a valid reading
-  if ( (readContact() == true) && (oldContactState != contactState) )    // valid change reading
-  {
-    #ifdef DEBUG
-      Serial.print("State change to: ");
-    #endif
-    
-    // select code word to send -- open or close
-    if(contactState == false)
+
+    static time_t lastSendTime = 0;
+    if (Time.now() - lastSendTime > DELAY_SECONDS)
     {
-      codeWord = OPEN_CODE;
-      #ifdef DEBUG
-        Serial.println("OPEN");
-      #endif
+        lastSendTime = Time.now();
+
+        if (codeWord == CODE_ONE) {
+            codeWord = CODE_TWO;
+        } else {
+            codeWord = CODE_ONE;
+        }
+        // send the code word 20 times -
+        digitalWrite(LED_PIN, HIGH);
+        for (int i = 0; i < 20; i++)
+        {
+            sendCodeWord(codeWord);
+        }
+        digitalWrite(LED_PIN, LOW);
+
     }
-    else
-    {
-      #ifdef DEBUG
-        Serial.println("CLOSE");
-      #endif
-      codeWord = CLOSE_CODE;
-    }
-    
-    // send the code word 20 times - 
-    digitalWrite(LED_PIN, HIGH);
-    for (int i = 0; i < 20; i++)
-    {
-      sendCodeWord(codeWord);
-    }
-    digitalWrite(LED_PIN, LOW);
-    oldContactState = contactState;
-  }
+
 }
 /***************************************** end of loop() **********************************************/
 
@@ -102,8 +80,8 @@ void sendCodeWord(unsigned long code)
 {
   const unsigned long MASK = 0x00800000ul;  // mask off all but bit 23
   const int CODE_LENGTH = 24; // a code word is 24 bits + sync
-  
-  // send the code word bits  
+
+  // send the code word bits
   for (int i = 0; i < CODE_LENGTH; i++)
   {
     if ( (code & MASK) == 0)
@@ -113,13 +91,13 @@ void sendCodeWord(unsigned long code)
         Serial.print("0");
       #endif
     }
-    else 
+    else
     {
       sendOne();
       #ifdef DEBUG
         Serial.print("1");
       #endif
-    }      
+    }
     code = code <<1;
   }
   //send the sync
@@ -127,7 +105,7 @@ void sendCodeWord(unsigned long code)
   #ifdef DEBUG
     Serial.println(" SYNC");
   #endif
-  
+
   return;
 }
 /************************************ end of sendCodeWord() *******************************************/
@@ -144,8 +122,8 @@ void sendZero()
   {
       digitalWrite(TX_PIN, LOW);
       delayMicroseconds(BAUD_TIME);
-  }  
-  return; 
+  }
+  return;
 }
 /************************************** end of sendZero() *********************************************/
 
@@ -159,10 +137,10 @@ void sendOne()
   {
       digitalWrite(TX_PIN, HIGH);
       delayMicroseconds(BAUD_TIME);
-  } 
+  }
   digitalWrite(TX_PIN, LOW);
-  delayMicroseconds(BAUD_TIME); 
-  return; 
+  delayMicroseconds(BAUD_TIME);
+  return;
 }
 /*************************************** end of sendOne() *********************************************/
 
@@ -178,54 +156,7 @@ void sendSync()
   {
       digitalWrite(TX_PIN, LOW);
       delayMicroseconds(BAUD_TIME);
-  }  
-  return; 
+  }
+  return;
 }
 /************************************** end of sendSync() *********************************************/
-
-/**************************************** readContact() ***********************************************/
-// readContact():  function that reads a digital value (input with internal pullup) on the CONTACT_PIN.
-//  The contact value is tested for bounce and noise and if it is valid, the funtion sets the global
-//  variable contactState accordingly and returns true.  Otherwise, the gobal variable is not changed
-//  and the function returns false.  This function is blocking.
-//
-// Return:  true of a valid contact value is read; false otherwise.  A valid contact value is declared
-//  if the same value is read from the CONTACT_PIN in two successive reading separated by 10 ms debounce
-//  time.
-
-boolean readContact()
-{
-  boolean firstRead, secondRead;
-  
-  if(digitalRead(CONTACT_PIN) == HIGH)
-  {
-    firstRead = false;
-  }
-  else
-  {
-    firstRead = true;
-  }
-  
-  delay(10);      // wait 10 ms for noise and bounce
-  if(digitalRead(CONTACT_PIN) == HIGH)
-  {
-    secondRead = false;
-  }
-  else
-  {
-    secondRead = true;
-  }
-  
-  // if the two reads are the same, proices as valid contact state
-  if (secondRead == firstRead)
-  {
-    contactState = secondRead;
-    return true;
-  }
-  else
-  {
-    return false;  // noise
-  }
-}
-/************************************* end of readContact() *******************************************/
-
