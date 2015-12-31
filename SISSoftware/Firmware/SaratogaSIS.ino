@@ -18,7 +18,7 @@
 /***************************************************************************************************/
 // saratogaSIS: SIS firmware - this is the software that is upoaded to the SIS Hub and performs
 // sensor protocol decoding, sensor trip code processing, logging and cloud communication.  Compile
-// this code and upload (flash) it to your Photon or other particle.io device.  
+// this code and upload (flash) it to your Photon or other particle.io device.
 //
 //  This software has been extensively tested with the particle.io Photon.  It will run on the
 // particle.io Core; however, the Core may run out of RAM unless the circular buffer size is
@@ -1430,42 +1430,81 @@ void process315()
 
 void process433()
 {
-  //this is right out of RC-SWITCH
-  static unsigned int duration;
-  static unsigned int changeCount;
-  static unsigned long lastTime = 0L;
-  static unsigned int repeatCount = 0;
+    //this is right out of RC-SWITCH
+    static unsigned int duration;
+    static unsigned int changeCount;
+    static unsigned long lastTime = 0L;
+    static unsigned int repeatCount = 0;
 
+    long time = micros();
+    duration = time - lastTime;
 
-  long time = micros();
-  duration = time - lastTime;
+/*
+    A pulse for a bit is between 300 and 500 microseconds. A bit always contains either
+    three high or three low pulse intervals in a row. So if we have a duration that is
+    longer than 1500, it is not part of the bit stream.
+    When we are just processing noise, then codeTimes[0] could be anything.
+    If this interrupt is:
+        - the first rise of the pulse that starts the very first sync of
+          the first code transmission, then duration
+          could be anything. It will be stored in codeTimes at the current
+          index position since we don't know it is special.
+        - the fall of the first pulse that starts a sync, then duration
+          will be one pulse. It will be stored in codeTimes at the current
+          index position.
+        - the rise at the end of the sync, then duration will be over 5000 microseconds
+          and changeCount will be set to 0. The duration of this sync low time
+          will be stored in changeCount[0]. The duration is 31 pulse times long.
+        - the fall of the first part of a bit sequence then duration will be either
+          one pulse if a 0 or 3 pulses which is the start of a 1.
+        - if this is a valid code sequence, then as soon as this code transmission
+          is over, a new sync and sequence will start. The new sequence will start
+          with a pulse high and then 31 pulses low. This will trigger us that the
+          previous sequence of interrupts was a valid code sequence. To trigger
+          us this new sync low time must be longer than 5000 (of course) and be within
+          +/- 200 microseconds of the sync low that we saw previously. If these
+          conditions are met, then we bump repeatCount because we have now seen
+          two valid sync low times within 52 changes.
+        - when this all happens successfully a second time (we get a third sync
+          low that is +/- 200 microseconds of the first one we saw) then we
+          call the decoder for it to decide if the sequence of interrupt times
+          is a valid code sequence.
 
-  if (duration > 5000 && duration > codeTimes[0] - 200 && duration < codeTimes[0] + 200)
-  {
-	repeatCount++;
-	changeCount--;
-	if (repeatCount == 2)  // two successive code words found
-	{
-  	decode(changeCount); // decode the protocol from the codeTimes array
-  	repeatCount = 0;
-	}
-	changeCount = 0;
-  }
-  else if (duration > 5000)
-  {
-	changeCount = 0;
-  }
+    Q: Why don't we calculate codeTimes[0]/31 and check that a new duration is
+       at that value +/- some tolerance? That would allow us to ignore noise.
+ */
+    if (duration > 5000
+        && duration > codeTimes[0] - 200
+        && duration < codeTimes[0] + 200)
+    {
+        // we found a second sync
+        repeatCount++;
+        changeCount--;
 
-  if (changeCount >= 52) // too many bits before sync
-  {
-	changeCount = 0;
-	repeatCount = 0;
-  }
+	    if (repeatCount == 2)  // two successive code words found
+	    {
+            decode(changeCount); // decode the protocol from the codeTimes array
+            repeatCount = 0;
+        }
+        changeCount = 0; // reset so we're ready to start a new sequence
+    }
+    else if (duration > 5000)
+    {
+        // If the duration is this long, then it could be a sync
+        changeCount = 0;
+    }
 
-  codeTimes[changeCount++] = duration;
-  lastTime = time;
+    if (changeCount >= 52) // too many bits before sync
+    {
+        // reset, we just had a blast of noise
+        changeCount = 0;
+        repeatCount = 0;
+    }
 
-  return;
+    codeTimes[changeCount++] = duration;
+    lastTime = time;
+
+    return;
 }
 /***********************************end of isr433() ********************************************/
 
@@ -1479,54 +1518,66 @@ void process433()
 void decode(unsigned int changeCount)
 {
 
-  unsigned long code = 0L;
-  unsigned long delay;
-  unsigned long delayTolerance;
+    unsigned long code = 0L;
+    unsigned long delay;
+    unsigned long delayTolerance;
 
-  delay = codeTimes[0] / 31L;
-  delayTolerance = delay * TOLERANCE * 0.01;
+    delay = codeTimes[0] / 31L;
+    delayTolerance = delay * TOLERANCE * 0.01;
 
-  for (int i = 1; i < changeCount ; i=i+2)
-  {
+    for (int i = 1; i < changeCount ; i=i+2)
+    {
 
-	if (codeTimes[i] > delay-delayTolerance && codeTimes[i] < delay+delayTolerance && codeTimes[i+1] > delay*3-delayTolerance && codeTimes[i+1] < delay*3+delayTolerance)
-	{
-  	code = code << 1;
-	}
-	else
-  	if (codeTimes[i] > delay*3-delayTolerance && codeTimes[i] < delay*3+delayTolerance && codeTimes[i+1] > delay-delayTolerance && codeTimes[i+1] < delay+delayTolerance)
-  	{
-    	code+=1;
-    	code = code << 1;
-  	}
-  	else
-  	{
-    	// Failed
-    	i = changeCount;
-    	code = 0;
-  	}
-   }
-   code = code >> 1;
-   if (changeCount > 6) // ignore < 4bit values as there are no devices sending 4bit values => noise
-   {
-  	receivedSensorCode = code;
-  	if (code == 0)
-  	{
-    	codeAvailable = false;
-  	}
-  	else
-  	{
-    	codeAvailable = true;
-  	}
+	    if (codeTimes[i] > delay-delayTolerance
+            && codeTimes[i] < delay+delayTolerance
+            && codeTimes[i+1] > delay*3-delayTolerance
+            && codeTimes[i+1] < delay*3+delayTolerance)
+	    {
+            // we have a 0 shift left one
+            code = code << 1;
 
-   }
-   else	// too short -- noise
-   {
- 	codeAvailable = false;
- 	receivedSensorCode = 0L;
-   }
+	    }
+        else if (codeTimes[i] > delay*3-delayTolerance
+                && codeTimes[i] < delay*3+delayTolerance
+                && codeTimes[i+1] > delay-delayTolerance
+                && codeTimes[i+1] < delay+delayTolerance)
+  	          {
+                  // we have a 1, add one to code
+                  code+=1;
+                  // shift left one
+                  code = code << 1;
+  	           }
+               else
+  	            {
+                    // Failed, this sequence of interrupts did not indicate a 1 or 0
+                    // so abort the decoding process.
+                    i = changeCount;
+                    code = 0;
+                }
+    }
+    // in decoding we shift one too many, so shift right one
+    code = code >> 1;
 
-  return;
+    if (changeCount > 6) // ignore < 4bit values as there are no devices sending 4bit values => noise
+    {
+        receivedSensorCode = code;
+        if (code == 0)
+        {
+            codeAvailable = false;
+        }
+        else
+        {
+            codeAvailable = true;
+        }
+
+    }
+    else	// too short -- noise
+    {
+        codeAvailable = false;
+        receivedSensorCode = 0L;
+    }
+
+    return;
 }
 
 /************************************ end of decode() ********************************************/
