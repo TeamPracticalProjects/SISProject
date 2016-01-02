@@ -26,15 +26,15 @@
 // however, the Electron is not available for testing as of this release.
 //
 //  Use of this software is subject to the Terms of Use, which can be found at:
-//    https://github.com/SISProject/SISDocs/blob/master/Terms_of_Use_License_and_Disclaimer.pdf
+//  https://github.com/TeamPracticalProjects/SISProject/blob/master/SISDocs/Terms_of_Use_License_and_Disclaimer.pdf
 //
 //  This software uses code extracted from the Arduino RC-Switch library:
 //    https://github.com/sui77/rc-switch
 // Portions of this software that have been extracted from RC-Switch are subject to the RC-Switch
 // license, as well as the the SIS Terms of Use.
 //
-//  Version 1.00.  11/19/15.
-const String VERSION = "1.00";   	// current firmware version
+//  Version 1.01.  12/30/15.
+const String VERSION = "1.01";   	// current firmware version
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
