@@ -34,7 +34,8 @@
 // license, as well as the the SIS Terms of Use.
 //
 //  Version 1.00.  11/19/15.
-const String VERSION = "1.00";   	// current firmware version
+const String VERSION = "1.00JBS";   	// current firmware version
+// playing with the ISR
 //
 //  (c) 2015 by Bob Glicksman and Jim Schrempp
 /***************************************************************************************************/
@@ -82,11 +83,12 @@ const byte NOT_HOME = 2;	// person is not home
 /************************************* Global Variables ****************************************************/
 volatile boolean codeAvailable = false;  // set to true when a valid code is received and confirmed
 volatile unsigned long receivedSensorCode; // decoded 24 bit value for a received and confirmed code from a wireless sensor
-volatile unsigned int codeTimes315[52];  // array to hold times (microseconds) between interrupts from transitions in the received data
+const int MAX_CODE_TIMES = 52;
+volatile unsigned int codeTimes315[MAX_CODE_TIMES];  // array to hold times (microseconds) between interrupts from transitions in the received data
                          	//  times[0] holds the value of the sync interval (LOW).  HIGH and LOW times for codes are
                          	//  stored in times[1] - times[49] (HIGH and LOW pairs for 24 bits).  A few extra elements
                          	//  are provided for overflow.
-volatile unsigned int codeTimes433[52];  // array to hold times (microseconds) between interrupts from transitions in the received data
+volatile unsigned int codeTimes433[MAX_CODE_TIMES];  // array to hold times (microseconds) between interrupts from transitions in the received data
                          	//  times[0] holds the value of the sync interval (LOW).  HIGH and LOW times for codes are
                          	//  stored in times[1] - times[49] (HIGH and LOW pairs for 24 bits).  A few extra elements
                          	//  are provided for overflow.
@@ -1383,45 +1385,51 @@ void isr433()
 
 /************************************* process315() ***********************************************/
 //This is the code to process and store timing data for interrupt 3 (315 MHz)
+//This is identical to the process433 routine
 
 void process315()
 {
-  //this is right out of RC-SWITCH
-  static unsigned int duration;
-  static unsigned int changeCount;
-  static unsigned long lastTime = 0L;
-  static unsigned int repeatCount = 0;
+    //this is right out of RC-SWITCH
+    static unsigned int duration;
+    static unsigned int changeCount;
+    static unsigned long lastTime = 0L;
+    static unsigned int repeatCount = 0;
 
+    long time = micros();
+    duration = time - lastTime;
 
-  long time = micros();
-  duration = time - lastTime;
+    if (duration > 5000
+        && duration > codeTimes[0] - 200
+        && duration < codeTimes[0] + 200)
+    {
+        // we found a second sync
+        repeatCount++;
+        changeCount--;
 
-  if (duration > 5000 && duration > codeTimes[0] - 200 && duration < codeTimes[0] + 200)
-  {
-	repeatCount++;
-	changeCount--;
-	if (repeatCount == 2)  // two successive code words found
-	{
-  	decode(changeCount); // decode the protocol from the codeTimes array
-  	repeatCount = 0;
-	}
-	changeCount = 0;
-  }
-  else if (duration > 5000)
-  {
-	changeCount = 0;
-  }
+	    if (repeatCount == 2)  // two successive code words found
+	    {
+            decode(changeCount); // decode the protocol from the codeTimes array
+            repeatCount = 0;
+        }
+        changeCount = 0; // reset so we're ready to start a new sequence
+    }
+    else if (duration > 5000)
+    {
+        // If the duration is this long, then it could be a sync
+        changeCount = 0;
+    }
 
-  if (changeCount >= 52) // too many bits before sync
-  {
-	changeCount = 0;
-	repeatCount = 0;
-  }
+    if (changeCount >= MAX_CODE_TIMES) // too many bits before sync
+    {
+        // reset, we just had a blast of noise
+        changeCount = 0;
+        repeatCount = 0;
+    }
 
-  codeTimes[changeCount++] = duration;
-  lastTime = time;
+    codeTimes[changeCount++] = duration;
+    lastTime = time;
 
-  return;
+    return;
 }
 /***********************************end of process315() ********************************************/
 
@@ -1494,7 +1502,7 @@ void process433()
         changeCount = 0;
     }
 
-    if (changeCount >= 52) // too many bits before sync
+    if (changeCount >= MAX_CODE_TIMES) // too many bits before sync
     {
         // reset, we just had a blast of noise
         changeCount = 0;
@@ -1519,31 +1527,34 @@ void decode(unsigned int changeCount)
 {
 
     unsigned long code = 0L;
-    unsigned long delay;
-    unsigned long delayTolerance;
+    unsigned long pulseTime;
+    float pulseTimeThree;
+    unsigned long pulseTolerance;
 
-    delay = codeTimes[0] / 31L;
-    delayTolerance = delay * TOLERANCE * 0.01;
+    pulseTime = codeTimes[0] / 31L;
+    pulseTimeThree = pulseTime * 3;
+
+    pulseTolerance = pulseTime * TOLERANCE * 0.01;
 
     for (int i = 1; i < changeCount ; i=i+2)
     {
 
-	    if (codeTimes[i] > delay-delayTolerance
-            && codeTimes[i] < delay+delayTolerance
-            && codeTimes[i+1] > delay*3-delayTolerance
-            && codeTimes[i+1] < delay*3+delayTolerance)
+	    if (codeTimes[i] > pulseTime - pulseTolerance
+            && codeTimes[i] < pulseTime + pulseTolerance
+            && codeTimes[i+1] > pulseTimeThree - pulseTolerance
+            && codeTimes[i+1] < pulseTimeThree + pulseTolerance)
 	    {
             // we have a 0 shift left one
             code = code << 1;
 
 	    }
-        else if (codeTimes[i] > delay*3-delayTolerance
-                && codeTimes[i] < delay*3+delayTolerance
-                && codeTimes[i+1] > delay-delayTolerance
-                && codeTimes[i+1] < delay+delayTolerance)
+        else if (codeTimes[i] > pulseTimeThree - pulseTolerance
+                && codeTimes[i] < pulseTimeThree + pulseTolerance
+                && codeTimes[i+1] > pulseTime - pulseTolerance
+                && codeTimes[i+1] < pulseTime + pulseTolerance)
   	          {
                   // we have a 1, add one to code
-                  code+=1;
+                  code = code + 1;
                   // shift left one
                   code = code << 1;
   	           }
