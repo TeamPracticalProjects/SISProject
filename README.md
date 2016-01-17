@@ -11,6 +11,8 @@ We are two hobbyists who work on the SIS in our spare time. You don't have to be
 
 Of course collaboration could also mean that you want to add functions to the core firmware or javascript web site. That would be cool too.
 
+The documentation is the best place to learn about the project. We starting a [Wiki](https://github.com/TeamPracticalProjects/SISProject/wiki/Wiki-Home) with little tips for new developers.
+
 Send us a message to join in the fun: SISProject@shrimpware.com
 
 
