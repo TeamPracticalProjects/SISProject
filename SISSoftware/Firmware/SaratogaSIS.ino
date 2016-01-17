@@ -18,7 +18,7 @@
 /***************************************************************************************************/
 // saratogaSIS: SIS firmware - this is the software that is upoaded to the SIS Hub and performs
 // sensor protocol decoding, sensor trip code processing, logging and cloud communication.  Compile
-// this code and upload (flash) it to your Photon or other particle.io device.  
+// this code and upload (flash) it to your Photon or other particle.io device.
 //
 //  This software has been extensively tested with the particle.io Photon.  It will run on the
 // particle.io Core; however, the Core may run out of RAM unless the circular buffer size is
@@ -381,7 +381,7 @@ void loop()
 	{
     	sensorCode = "Received sensor code: ";
     	sensorCode += receivedSensorCode;
-    	sensorCode += " for unknown sensor";
+    	sensorCode += " for unknown sensor";  // note that JScript client depends upon the string "unknown"
     	Serial.println(sensorCode);  // USB print for debugging
     	sensorCode.toCharArray(cloudMsg, sensorCode.length() );  // publish to cloud
 
