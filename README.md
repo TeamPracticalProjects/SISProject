@@ -18,4 +18,5 @@ Send us a message to join in the fun: SISProject@shrimpware.com
 
 Read about the SIS at other places on the web:
 * [Hackster.io](https://www.hackster.io/PracticalProjects/standalone-intelligent-sensor-system-cbdb44)
+* [Instructables](http://www.instructables.com/id/Standalone-Intelligent-Sensor-System/)
 
