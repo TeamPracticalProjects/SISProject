@@ -9,6 +9,11 @@ If you have code to contribute, then generate a pull request for the Development
 
 We are two hobbyists who work on the SIS in our spare time. You don't have to be a hardcore, gung-ho, work on it until you drop, kind of person; we certainly aren't. Collaboration could just mean that you'd like to have one of these to install and test somewhere. We are open to make changes to the code to fit your need, as long as you provide us feedback on how it works and ideas on how to improve it.
 
+We're currently working on three big things:
+* Cellular data instead of WiFi... We got the new Electron from Particle.io and it plugs into our PCB and works as expected. So this is really "done." You can get an Electron and use your SIS anywhere there is a cellular network.
+* Low power custom sensors... This project includes Arduino code to make your own wireless sensor, but running an Arduino requires regular power. We're working on using the ATTiny platform in power-down mode so we (you) could make any kind of low power sensor you want!
+* Graphical output in the client... Thanks to a contributor in the Netherlands we are experimenting with the Google graph "Timeline". It provides a strip chart view of the sensor log. This is more usable than the current text list. If you want to help with this, let us know.
+
 Of course collaboration could also mean that you want to add functions to the core firmware or javascript web site. That would be cool too.
 
 The documentation is the best place to learn about the project. We starting a [Wiki](https://github.com/TeamPracticalProjects/SISProject/wiki/Wiki-Home) with little tips for new developers.
