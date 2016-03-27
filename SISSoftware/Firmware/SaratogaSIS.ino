@@ -1698,9 +1698,6 @@ int sparkPublish (String eventName, String msg, int ttl)
 #endif
 
   return success;
-
-  return success;
-
 }
 
 
